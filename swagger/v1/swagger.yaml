@@ -1,0 +1,45 @@
+openapi: 3.0.1
+info:
+  title: Artsdata MCP Server API
+  version: v1
+servers:
+  - url: /
+paths:
+  /search-entities:
+    get:
+      summary: Search Artsdata entities
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: lang
+          required: false
+          schema:
+            type: string
+            enum: [en, fr]
+            default: en
+      responses:
+        "200":
+          description: Entity search results
+  /entities:
+    get:
+      summary: Fetch statements for an entity
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: lang
+          required: false
+          schema:
+            type: string
+            enum: [en, fr]
+            default: en
+      responses:
+        "200":
+          description: Formatted statements
