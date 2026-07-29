@@ -9,7 +9,7 @@ class EntitiesController < ApplicationController
     result = ArtsdataClient.new.search_items(query: query, lang: lang)
 
     render json: {
-      tool: "search_items",
+      tool: "search-entities",
       result: result,
       arguments: {
         query: query,

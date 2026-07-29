@@ -35,7 +35,9 @@ test/
 ## Configuration
 
 - `ARTSDATA_SPARQL_ENDPOINT` (optional): configurable SPARQL endpoint URL.
-- SPARQL query templates are currently placeholders in
+- `ARTSDATA_RECONCILIATION_ENDPOINT` (optional): configurable reconciliation
+  endpoint URL for `/search-entities`.
+- SPARQL query template for `/entities` is currently a placeholder in
   `app/services/artsdata_client.rb`.
 
 ## Run the application
@@ -57,7 +59,10 @@ docker build -t artsdata-mcp-server .
 Run the server:
 
 ```bash
-docker run --rm -p 3000:3000 -e ARTSDATA_SPARQL_ENDPOINT=https://example.org/sparql artsdata-mcp-server
+docker run --rm -p 3000:3000 \
+  -e ARTSDATA_SPARQL_ENDPOINT=https://example.org/sparql \
+  -e ARTSDATA_RECONCILIATION_ENDPOINT=https://recon.artsdata.ca/match \
+  artsdata-mcp-server
 ```
 
 Run tests in Docker:

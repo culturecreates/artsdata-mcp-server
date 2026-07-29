@@ -8,7 +8,7 @@ class EntitiesEndpointsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = JSON.parse(response.body)
-    assert_equal "search_items", body["tool"]
+    assert_equal "search-entities", body["tool"]
     assert_kind_of String, body["result"]
     assert_equal({ "query" => "example", "lang" => "en" }, body["arguments"])
   end
