@@ -42,7 +42,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
 
       assert_equal(
         "K2-5280: Centre Expo-Festival Center — performing arts presenting organization in Wellington\n" \
-        "K5-1221: Centre Christ-Roy, FCL Center — street_address at 1452 Rue Gigaire\n",
+        "K5-1221: Centre Christ-Roy, FCL Center — street_address at 1452 Rue Gigaire",
         result
       )
     ensure
@@ -54,7 +54,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
       {
         "queries" => [
           {
-            "limit" => 10,
+            "limit" => 50,
             "conditions" => [
               {
                 "matchType" => "name",

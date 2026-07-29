@@ -15,7 +15,7 @@ class ArtsdataClient
     payload = {
       queries: [
         {
-          limit: 10,
+          limit: 50,
           conditions: [
             {
               matchType: "name",
@@ -92,7 +92,7 @@ class ArtsdataClient
       next if qid.empty? || label.empty?
 
       "#{qid}: #{label} — #{description}".strip
-    end.compact.join("\n").then { |text| text.empty? ? text : "#{text}\n" }
+    end.compact.join("\n")
   end
 
   def format_statement_results(rows, entity_id:)
