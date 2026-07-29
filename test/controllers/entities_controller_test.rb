@@ -34,6 +34,15 @@ class EntitiesEndpointsTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
   end
 
+  test "search-entities includes cors headers" do
+    with_env("ARTSDATA_SPARQL_ENDPOINT", "http://127.0.0.1:9/sparql") do
+      get "/search-entities", params: { query: "example", lang: "en" }, headers: { "Origin" => "https://client.example" }
+    end
+
+    assert_response :success
+    assert_equal "*", response.headers["Access-Control-Allow-Origin"]
+  end
+
   private
 
   def with_env(key, value)

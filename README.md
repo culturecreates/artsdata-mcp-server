@@ -37,8 +37,14 @@ test/
 - `ARTSDATA_SPARQL_ENDPOINT` (optional): configurable SPARQL endpoint URL.
 - `ARTSDATA_RECONCILIATION_ENDPOINT` (optional): configurable reconciliation
   endpoint URL for `/search-entities`.
+- `ARTSDATA_CORS_ORIGINS` (optional): comma-separated CORS origins (default `*`).
 - SPARQL query template for `/entities` is currently a placeholder in
   `app/services/artsdata_client.rb`.
+- Docker instance profiles are provided in:
+  - `env/production.env`
+  - `env/staging.env`
+- `ARTSDATA_INSTANCE_TYPE` (optional): `PRODUCTION` (default) or `STAGING`.
+  The Docker entrypoint loads the matching file from `env/`.
 
 ## Run the application
 
@@ -59,10 +65,13 @@ docker build -t artsdata-mcp-server .
 Run the server:
 
 ```bash
-docker run --rm -p 3000:3000 \
-  -e ARTSDATA_SPARQL_ENDPOINT=https://example.org/sparql \
-  -e ARTSDATA_RECONCILIATION_ENDPOINT=https://recon.artsdata.ca/match \
-  artsdata-mcp-server
+docker run --rm -p 3000:3000 artsdata-mcp-server
+```
+
+Run with staging profile:
+
+```bash
+docker run --rm -p 3000:3000 -e ARTSDATA_INSTANCE_TYPE=STAGING artsdata-mcp-server
 ```
 
 Run tests in Docker:
