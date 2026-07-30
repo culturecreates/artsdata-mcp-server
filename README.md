@@ -109,9 +109,7 @@ This project uses GitHub Actions for continuous integration and automated deploy
 Every push to the `main` branch triggers a workflow that builds and deploys the application to Heroku.
 The workflow is defined in `.github/workflows/deploy-to-heroku.yml`.
 
-The Heroku app is configured to use the `production` environment variables from the Heroku CLI.
-Every pull request triggers a workflow that runs unit tests.
-The workflow is defined in `.github/workflows/run-unit-tests.yml`.
+Every pull request triggers a workflow that unit tests. The workflow is defined in `.github/workflows/run-unit-tests.yml`.
 
 ## Server Access & API Documentation
 The Artsdata MCP Server is actively deployed and hosted in a live production environment.
