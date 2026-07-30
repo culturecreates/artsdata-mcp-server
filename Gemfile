@@ -1,9 +1,9 @@
 source "https://rubygems.org"
 
-ruby "3.2.3"
+ruby "4.0.6"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.1.5"
+gem "rails", "~> 8.1.0"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
@@ -24,6 +24,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "bootsnap", require: false
 gem "rswag-api"
 gem "rswag-ui"
+gem "ostruct"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
