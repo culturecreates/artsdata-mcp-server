@@ -22,6 +22,11 @@ Both endpoints return JSON in MCP-style payloads with a `tool`, `result`, and `a
 ## Directory structure
 
 ```text
+.github/
+  workflows/
+    deploy-to-heroku.yml  # Workflow deploying to Heroku
+    run-unit-tests.yml    # Reusable workflow running Minitest
+    unit-test-on-pull-request.yml # Workflow running unit tests on pull requests
 app/
   controllers/entities_controller.rb
   services/artsdata_client.rb
@@ -97,3 +102,17 @@ Run all tests:
 ```bash
 bundle exec rails test
 ```
+
+## Deployment & CI/CD Details:
+
+This project uses GitHub Actions for continuous integration and automated deployment to Heroku.
+Every push to the `main` branch triggers a workflow that builds and deploys the application to Heroku.
+The workflow is defined in `.github/workflows/deploy-to-heroku.yml`.
+
+Every pull request triggers a workflow that unit tests. The workflow is defined in `.github/workflows/run-unit-tests.yml`.
+
+## Server Access & API Documentation
+The Artsdata MCP Server is actively deployed and hosted in a live production environment.
+
+Live Production Endpoints
+API Documentation (Swagger UI): https://artsdata-mcp-server-8cb4262e2362.herokuapp.com/api-docs/index.html
