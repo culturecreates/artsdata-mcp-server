@@ -8,7 +8,7 @@ class EntitiesEndpointsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = JSON.parse(response.body)
-    assert_equal "search_items", body["tool"]
+    assert_equal "search-entities", body["tool"]
     assert_kind_of String, body["result"]
     assert_equal({ "query" => "example", "lang" => "en" }, body["arguments"])
   end
@@ -32,6 +32,15 @@ class EntitiesEndpointsTest < ActionDispatch::IntegrationTest
     get "/search-entities", params: { query: "example", lang: "es" }
 
     assert_response :unprocessable_content
+  end
+
+  test "search-entities includes cors headers" do
+    with_env("ARTSDATA_SPARQL_ENDPOINT", "http://127.0.0.1:9/sparql") do
+      get "/search-entities", params: { query: "example", lang: "en" }, headers: { "Origin" => "https://client.example" }
+    end
+
+    assert_response :success
+    assert_equal "*", response.headers["Access-Control-Allow-Origin"]
   end
 
   private

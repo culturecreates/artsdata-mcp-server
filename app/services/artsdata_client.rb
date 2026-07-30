@@ -3,22 +3,32 @@ require "uri"
 require "json"
 
 class ArtsdataClient
-  def initialize(endpoint: ENV.fetch("ARTSDATA_SPARQL_ENDPOINT", "https://api.artsdata.ca/query"))
-    @endpoint = endpoint
+  def initialize(
+    sparql_endpoint: ENV.fetch("ARTSDATA_SPARQL_ENDPOINT", "https://api.artsdata.ca/query"),
+    reconciliation_endpoint: ENV.fetch("ARTSDATA_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/match")
+  )
+    @sparql_endpoint = sparql_endpoint
+    @reconciliation_endpoint = reconciliation_endpoint
   end
 
   def search_items(query:, lang:)
-    sparql = <<~SPARQL
-      # Placeholder SPARQL query using lucene index.
-      # Replace with final Artsdata query once schema is confirmed.
-      SELECT ?qid ?label ?description WHERE {
-        # TODO: Lucene-powered text search against Artsdata.
-      }
-      LIMIT 10
-    SPARQL
+    payload = {
+      queries: [
+        {
+          limit: 50,
+          conditions: [
+            {
+              matchType: "name",
+              propertyValue: query,
+              required: true
+            }
+          ]
+        }
+      ]
+    }
 
-    rows = execute_query(sparql, query: query, lang: lang)
-    format_search_results(rows)
+    body = execute_reconciliation_query(payload)
+    format_search_results(body.fetch("results", []))
   end
 
   def get_statements(entity_id:, lang:)
@@ -37,10 +47,10 @@ class ArtsdataClient
 
   private
 
-  attr_reader :endpoint
+  attr_reader :sparql_endpoint, :reconciliation_endpoint
 
   def execute_query(query, variables = {})
-    uri = URI.parse(endpoint)
+    uri = URI.parse(sparql_endpoint)
     request = Net::HTTP::Post.new(uri)
     request.set_form_data({ query: query, format: "application/sparql-results+json" }.merge(variables))
 
@@ -56,15 +66,33 @@ class ArtsdataClient
     []
   end
 
+  def execute_reconciliation_query(payload)
+    uri = URI.parse(reconciliation_endpoint)
+    request = Net::HTTP::Post.new(uri)
+    request["Content-Type"] = "application/json"
+    request.body = JSON.generate(payload)
+
+    response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+      http.request(request)
+    end
+
+    return {} unless response.is_a?(Net::HTTPSuccess)
+
+    JSON.parse(response.body)
+  rescue StandardError
+    {}
+  end
+
   def format_search_results(rows)
-    rows.map do |row|
-      qid = value_for(row, "qid")
-      label = value_for(row, "label")
-      description = value_for(row, "description")
-      next if qid.empty?
+    candidates = rows.flat_map { |row| row.fetch("candidates", []) }
+    candidates.map do |candidate|
+      qid = candidate.fetch("id", "").to_s
+      label = candidate.fetch("name", "").to_s
+      description = candidate.fetch("description", "").to_s
+      next if qid.empty? || label.empty?
 
       "#{qid}: #{label} — #{description}".strip
-    end.compact.join("\n").then { |text| text.empty? ? text : "#{text}\n" }
+    end.compact.join("\n")
   end
 
   def format_statement_results(rows, entity_id:)

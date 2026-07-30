@@ -1,3 +1,29 @@
 #!/bin/bash -e
 
+INSTANCE_TYPE="${ARTSDATA_INSTANCE_TYPE:-PRODUCTION}"
+APP_ROOT="${RAILS_ROOT:-/rails}"
+if [ ! -d "${APP_ROOT}/env" ]; then
+  APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+
+case "${INSTANCE_TYPE^^}" in
+  PRODUCTION)
+    ENV_FILE="${APP_ROOT}/env/production.env"
+    ;;
+  STAGING)
+    ENV_FILE="${APP_ROOT}/env/staging.env"
+    ;;
+  *)
+    echo "Unsupported ARTSDATA_INSTANCE_TYPE: ${INSTANCE_TYPE}. Use PRODUCTION or STAGING." >&2
+    exit 1
+    ;;
+esac
+
+if [ -f "${ENV_FILE}" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "${ENV_FILE}"
+  set +a
+fi
+
 exec "${@}"
