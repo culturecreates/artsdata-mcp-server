@@ -1,0 +1,24 @@
+name: Run unit tests on pull request
+
+on:
+  pull_request:
+    branches: [ 'main' ]
+  workflow_dispatch:
+
+jobs:
+  run-unit-tests:
+    uses: ./.github/workflows/run-unit-tests.yml
+
+  restrict-merging:
+    name: restrict-merging
+    runs-on: ubuntu-latest
+    needs: run-unit-tests
+    steps:
+      - name: Check unit test status
+        run: |
+          if [ ${{ needs.run-unit-tests.result }} != 'success' ]; then
+          exit 1
+          else
+          exit 0
+          fi
+
