@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- Ruby `3.2.3`
+- Ruby `4.0.6`
+- Rails `8.1`
 - Bundler
 
 ## Setup
