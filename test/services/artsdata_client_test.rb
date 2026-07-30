@@ -1,4 +1,5 @@
 require "test_helper"
+require "net/http"
 
 class ArtsdataClientTest < ActiveSupport::TestCase
   test "search_items uses reconciliation api and formats candidates" do
