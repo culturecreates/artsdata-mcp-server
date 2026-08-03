@@ -45,7 +45,7 @@ paths:
           description: Formatted statements
   /mcp:
     post:
-      summary: MCP JSON-RPC endpoint
+      summary: MCP endpoint
       requestBody:
         required: true
         content:
@@ -72,4 +72,4 @@ paths:
         "200":
           description: Tool list
         "404":
-          description: JSON-RPC method not found
+          description: Method not found
