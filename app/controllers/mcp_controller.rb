@@ -2,14 +2,14 @@ class McpController < ApplicationController
   TOOLS = [
     {
       name: "search_entities",
-      description: "Search Artsdata for entities (events, organizations, people, places) by free-text name. Use this before get_entity when you don't already have an Artsdata ID — returns ranked candidates with confidence scores. Chain the returned 'id' into get_entity to fetch the full record.",
+      description: "Search Artsdata for entities (organizations, people, places) by name. Use this before get_entity when you don't already have an Artsdata ID — returns entities. Chain the returned 'id' into get_entity to fetch the full record.",
       inputSchema: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Free text to search for, e.g. an organization or person name." },
+          query: { type: "string", description: "Text search for, e.g. an organization or person name." },
           types: {
             type: "array",
-            items: { type: "string", enum: %w[Event Organization Person Place] },
+            items: { type: "string", enum: %w[Organization Person Place] },
             description: "Optional. Restrict results to one or more entity types. Omit to search all types."
           },
           language: { type: "string", description: "Optional ISO language code (e.g. 'en', 'fr') if the query text's language is known. Leave unset otherwise." },
@@ -44,8 +44,7 @@ class McpController < ApplicationController
       inputSchema: {
         type: "object",
         properties: {
-          id: { type: "string", description: "An Artsdata ID (e.g. 'K10-122') or full resource URI (e.g. 'http://kg.artsdata.ca/resource/K10-122')." },
-          format: { type: "string", enum: %w[simplified json-ld], default: "simplified" }
+          id: { type: "string", description: "An Artsdata ID (e.g. 'K10-122') or full resource URI (e.g. 'http://kg.artsdata.ca/resource/K10-122')." }
         },
         required: ["id"],
         additionalProperties: false
@@ -56,9 +55,15 @@ class McpController < ApplicationController
           id: { type: "string" },
           uri: { type: "string" },
           type: { type: "string" },
+          additionalType: { type: "string" },
           name: { type: "string" },
+          alternateName: { type: "string" },
+          description: { type: "string" },
           sameAs: { type: "array", items: { type: "string" } },
-          url: { type: "string" }
+          url: { type: "string" },
+          image: { type: "string" },
+          disambiguatingDescription: { type: "string" },
+          mainEntityOfPage: { type: "string" }
         },
         required: %w[id uri type name]
       }
