@@ -7,6 +7,7 @@ Rails.application.routes.draw do
 
   get "search-entities", to: "entities#search"
   get "entities", to: "entities#show"
+  post "mcp", to: "mcp#handle"
 
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
