@@ -43,3 +43,33 @@ paths:
       responses:
         "200":
           description: Formatted statements
+  /mcp:
+    post:
+      summary: MCP endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jsonrpc:
+                  type: string
+                  enum: ["2.0"]
+                id:
+                  oneOf:
+                    - type: integer
+                    - type: string
+                    - type: "null"
+                method:
+                  type: string
+                  enum: ["tools/list", "tool/list"]
+                params:
+                  type: object
+                  additionalProperties: true
+              required: [jsonrpc, id, method, params]
+      responses:
+        "200":
+          description: Tool list
+        "404":
+          description: Method not found

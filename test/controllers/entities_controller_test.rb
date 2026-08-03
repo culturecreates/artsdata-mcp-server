@@ -43,6 +43,27 @@ class EntitiesEndpointsTest < ActionDispatch::IntegrationTest
     assert_equal "*", response.headers["Access-Control-Allow-Origin"]
   end
 
+  test "mcp tools/list returns tools metadata" do
+    post "/mcp", params: { jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }, as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "2.0", body["jsonrpc"]
+    assert_equal 1, body["id"]
+    assert_equal %w[search_entities get_entity], body.dig("result", "tools").map { |tool| tool["name"] }
+  end
+
+  test "mcp unknown method returns method not found error" do
+    post "/mcp", params: { jsonrpc: "2.0", id: 2, method: "unknown/method", params: {} }, as: :json
+
+    assert_response :not_found
+    body = JSON.parse(response.body)
+    assert_equal "2.0", body["jsonrpc"]
+    assert_equal 2, body["id"]
+    assert_equal(-32601, body.dig("error", "code"))
+    assert_equal "Method not found", body.dig("error", "message")
+  end
+
   private
 
   def with_env(key, value)
