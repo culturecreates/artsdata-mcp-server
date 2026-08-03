@@ -69,4 +69,57 @@ class ArtsdataClientTest < ActiveSupport::TestCase
       JSON.parse(captured_request.body)
     )
   end
+
+  test "search_entities supports allowed type filter and returns structured entities" do
+    response_body = {
+      "results" => [
+        {
+          "candidates" => [
+            {
+              "id" => "K10-122",
+              "name" => "Rubberband",
+              "types" => ["Organization", "DanceGroup"]
+            }
+          ]
+        }
+      ]
+    }
+
+    response = Net::HTTPOK.new("1.1", "200", "OK")
+    response.instance_variable_set(:@read, true)
+    response.instance_variable_set(:@body, JSON.generate(response_body))
+    captured_request = nil
+
+    original_start = Net::HTTP.method(:start)
+    Net::HTTP.singleton_class.define_method(:start) do |_host, _port, use_ssl:, &block|
+      fake_http = Object.new
+      fake_http.define_singleton_method(:request) do |request|
+        captured_request = request
+        response
+      end
+      block.call(fake_http)
+    end
+
+    begin
+      client = ArtsdataClient.new(reconciliation_endpoint: "https://recon.artsdata.ca/match")
+      result = client.search_entities(query: "Rubberband", types: ["Organization", "UnknownType"])
+
+      assert_equal(
+        [
+          {
+            id: "K10-122",
+            uri: "http://kg.artsdata.ca/resource/K10-122",
+            name: "Rubberband",
+            types: ["Organization", "DanceGroup"],
+            description: ""
+          }
+        ],
+        result
+      )
+    ensure
+      Net::HTTP.singleton_class.define_method(:start, original_start)
+    end
+
+    assert_equal "Organization", JSON.parse(captured_request.body).dig("queries", 0, "type")
+  end
 end

@@ -64,6 +64,32 @@ class EntitiesEndpointsTest < ActionDispatch::IntegrationTest
     assert_equal "Method not found", body.dig("error", "message")
   end
 
+  test "mcp tools/call search_entities returns content and structuredContent" do
+    with_env("ARTSDATA_RECONCILIATION_ENDPOINT", "http://127.0.0.1:9/reconciliation") do
+      post "/mcp",
+           params: {
+             jsonrpc: "2.0",
+             id: 2,
+             method: "tools/call",
+             params: {
+               name: "search_entities",
+               arguments: { query: "Rubberband", types: ["Organization"] }
+             }
+           },
+           as: :json
+    end
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    expected_structured_content = { "results" => [] }
+
+    assert_equal "2.0", body["jsonrpc"]
+    assert_equal 2, body["id"]
+    assert_equal expected_structured_content, body.dig("result", "structuredContent")
+    assert_equal JSON.generate(expected_structured_content), body.dig("result", "content", 0, "text")
+    assert_equal false, body.dig("result", "isError")
+  end
+
   private
 
   def with_env(key, value)

@@ -3,6 +3,8 @@ require "uri"
 require "json"
 
 class ArtsdataClient
+  ALLOWED_ENTITY_TYPES = %w[Organization Person Place].freeze
+
   def initialize(
     sparql_endpoint: ENV.fetch("ARTSDATA_SPARQL_ENDPOINT", "https://api.artsdata.ca/query"),
     reconciliation_endpoint: ENV.fetch("ARTSDATA_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/match")
@@ -12,6 +14,11 @@ class ArtsdataClient
   end
 
   def search_items(query:, lang:)
+    entities = search_entities(query: query)
+    format_search_results(entities)
+  end
+
+  def search_entities(query:, types: nil)
     payload = {
       queries: [
         {
@@ -27,8 +34,11 @@ class ArtsdataClient
       ]
     }
 
+    supported_type = Array(types).find { |type| ALLOWED_ENTITY_TYPES.include?(type.to_s) }
+    payload[:queries][0][:type] = supported_type if supported_type
+
     body = execute_reconciliation_query(payload)
-    format_search_results(body.fetch("results", []))
+    format_entity_results(body.fetch("results", []))
   end
 
   def get_statements(entity_id:, lang:)
@@ -83,16 +93,37 @@ class ArtsdataClient
     {}
   end
 
-  def format_search_results(rows)
+  def format_search_results(entities)
+    entities.map do |entity|
+      id = entity[:id].to_s
+      name = entity[:name].to_s
+      description = entity[:description].to_s
+      next if id.empty? || name.empty?
+
+      "#{id}: #{name} — #{description}".strip
+    end.compact.join("\n")
+  end
+
+  def format_entity_results(rows)
     candidates = rows.flat_map { |row| row.fetch("candidates", []) }
     candidates.map do |candidate|
-      qid = candidate.fetch("id", "").to_s
-      label = candidate.fetch("name", "").to_s
+      id = candidate.fetch("id", "").to_s
+      name = candidate.fetch("name", "").to_s
       description = candidate.fetch("description", "").to_s
-      next if qid.empty? || label.empty?
+      next if id.empty? || name.empty?
 
-      "#{qid}: #{label} — #{description}".strip
-    end.compact.join("\n")
+      uri = candidate.fetch("uri", "").to_s
+      uri = "http://kg.artsdata.ca/resource/#{id}" if uri.empty?
+      types = Array(candidate["types"]).map(&:to_s).reject(&:empty?)
+
+      {
+        id: id,
+        uri: uri,
+        name: name,
+        types: types,
+        description: description
+      }
+    end.compact
   end
 
   def format_statement_results(rows, entity_id:)

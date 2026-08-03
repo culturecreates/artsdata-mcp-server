@@ -63,7 +63,7 @@ paths:
                     - type: "null"
                 method:
                   type: string
-                  enum: ["tools/list", "tool/list"]
+                  enum: ["tools/list", "tool/list", "tools/call", "tool/call"]
                 params:
                   type: object
                   additionalProperties: true

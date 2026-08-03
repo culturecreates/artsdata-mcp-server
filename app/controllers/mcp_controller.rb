@@ -78,12 +78,50 @@ class McpController < ApplicationController
         id: params[:id],
         result: { tools: TOOLS }
       }
-    else
+    when "tools/call", "tool/call"
+      return render_tool_not_found unless params.dig(:params, :name) == "search_entities"
+
+      arguments = params.dig(:params, :arguments) || {}
+      results = ArtsdataClient.new.search_entities(
+        query: arguments[:query].to_s,
+        types: arguments[:types]
+      )
+      structured_content = { results: results }
+
       render json: {
         jsonrpc: "2.0",
         id: params[:id],
-        error: { code: -32_601, message: "Method not found" }
-      }, status: :not_found
+        result: {
+          content: [
+            {
+              type: "text",
+              text: JSON.generate(structured_content)
+            }
+          ],
+          structuredContent: structured_content,
+          isError: false
+        }
+      }
+    else
+      render_method_not_found
     end
+  end
+
+  private
+
+  def render_method_not_found
+    render json: {
+      jsonrpc: "2.0",
+      id: params[:id],
+      error: { code: -32_601, message: "Method not found" }
+    }, status: :not_found
+  end
+
+  def render_tool_not_found
+    render json: {
+      jsonrpc: "2.0",
+      id: params[:id],
+      error: { code: -32_601, message: "Tool not found" }
+    }, status: :not_found
   end
 end
