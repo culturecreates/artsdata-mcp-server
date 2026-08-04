@@ -35,7 +35,7 @@ class ArtsdataClient
     }
 
     supported_type = Array(types).find { |type| ALLOWED_ENTITY_TYPES.include?(type.to_s) }
-    payload[:queries][0][:type] = supported_type if supported_type
+    payload[:queries][0][:type] = "http://schema.org/#{supported_type}"  if supported_type
 
     body = execute_reconciliation_query(payload)
     format_entity_results(body.fetch("results", []))
