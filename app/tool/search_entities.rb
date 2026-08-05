@@ -4,13 +4,14 @@ require "json"
 class SearchEntities < MCP::Tool
   description "Tool to search for entities in the Artsdata knowledge graph by name and type(optional)."
 
-  schema_path = File.expand_path("../schema/search_entities_schema.json", __dir__)
-  SCHEMA = JSON.parse(File.read(schema_path), symbolize_names: true)
+  request_schema_path = File.expand_path("../schema/search_entities_request_schema.json", __dir__)
+  REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
 
-  input_schema(properties: SCHEMA[:properties],
-               required: SCHEMA[:required],
-               additionalProperties: SCHEMA[:additionalProperties]
-  )
+  response_schema_path = File.expand_path("../schema/search_entities_response_schema.json", __dir__)
+  RESPONSE_SCHEMA = JSON.parse(File.read(response_schema_path), symbolize_names: true)
+
+  input_schema(REQUEST_SCHEMA)
+  output_schema(RESPONSE_SCHEMA)
 
   class << self
     def call(query:, language:, limit:)
