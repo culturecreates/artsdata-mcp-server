@@ -11,11 +11,11 @@ class ArtsdataClient
     @reconciliation_endpoint = reconciliation_endpoint
   end
 
-  def search_items(query:, lang:)
+  def search_items(query:, lang:, limit:)
     payload = {
       queries: [
         {
-          limit: 50,
+          limit: limit,
           conditions: [
             {
               matchType: "name",
@@ -27,7 +27,7 @@ class ArtsdataClient
       ]
     }
 
-    body = execute_reconciliation_query(payload)
+    body = execute_reconciliation_query(payload, lang:)
     format_search_results(body.fetch("results", []))
   end
 
@@ -66,10 +66,11 @@ class ArtsdataClient
     []
   end
 
-  def execute_reconciliation_query(payload)
+  def execute_reconciliation_query(payload, lang: "en")
     uri = URI.parse(reconciliation_endpoint)
     request = Net::HTTP::Post.new(uri)
     request["Content-Type"] = "application/json"
+    request["accept-language"] = lang
     request.body = JSON.generate(payload)
 
     response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
@@ -85,14 +86,14 @@ class ArtsdataClient
 
   def format_search_results(rows)
     candidates = rows.flat_map { |row| row.fetch("candidates", []) }
-    candidates.map do |candidate|
-      qid = candidate.fetch("id", "").to_s
-      label = candidate.fetch("name", "").to_s
-      description = candidate.fetch("description", "").to_s
-      next if qid.empty? || label.empty?
 
-      "#{qid}: #{label} — #{description}".strip
-    end.compact.join("\n")
+    candidates.map do |candidate|
+      # Build the full URI using the candidate's id
+      uri = "http://kg.artsdata.ca/resource/#{candidate['id']}"
+
+      # Merge/override the computed URI and strip out unwanted keys
+      candidate.merge("uri" => uri).except("score", "match", "features")
+    end
   end
 
   def format_statement_results(rows, entity_id:)
