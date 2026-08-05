@@ -6,7 +6,7 @@ class EntitiesController < ApplicationController
     lang = normalize_lang(params[:lang])
     return render_invalid_lang if lang.nil?
 
-    result = ArtsdataClient.new.search_items(query: query, lang: lang)
+    result = ArtsdataClient.new.search_items(query: query, lang: lang, limit: 10)
 
     render json: {
       tool: "search-entities",
