@@ -26,6 +26,8 @@ gem "rswag-api"
 gem "rswag-ui"
 gem "ostruct"
 
+gem "mcp"
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
