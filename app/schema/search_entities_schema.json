@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SearchQueryRequest",
+  "type": "object",
+  "version": "1.0.0",
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Non-empty mandatory search query."
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Place",
+          "Person",
+          "Organization"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "Optional list of type filters; can be empty."
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "fr"
+      ],
+      "default": "en",
+      "description": "Language code, restricted to 'en' or 'fr'."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 25,
+      "description": "Number of results to return."
+    }
+  },
+  "required": [
+    "query"
+  ],
+  "additionalProperties": false
+}
