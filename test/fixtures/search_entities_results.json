@@ -1,0 +1,26 @@
+[
+  {
+    "id": "Q123",
+    "name": "Festival Example",
+    "description": "Sample fixture entity",
+    "type": [
+      {
+        "id": "http://schema.org/Organization",
+        "name": "Organization"
+      }
+    ],
+    "uri": "http://kg.artsdata.ca/resource/Q123"
+  },
+  {
+    "id": "Q456",
+    "name": "Another Festival",
+    "description": "Another fixture entity",
+    "type": [
+      {
+        "id": "http://schema.org/Organization",
+        "name": "Organization"
+      }
+    ],
+    "uri": "http://kg.artsdata.ca/resource/Q456"
+  }
+]
