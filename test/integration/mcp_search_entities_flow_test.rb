@@ -22,7 +22,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal 1, initialize_response.fetch("id")
-    assert_nil @mcp_session_id
+    assert_not_nil @mcp_session_id
 
     # MCP notifications/initialized
     initialized_response = mcp_post(jsonrpc: "2.0", method: "notifications/initialized", params: {})
