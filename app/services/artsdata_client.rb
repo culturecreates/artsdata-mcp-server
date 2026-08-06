@@ -3,6 +3,10 @@ require "uri"
 require "json"
 
 class ArtsdataClient
+
+  SCHEMA_BASE_URL = 'http://schema.org/'.freeze
+  RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
+
   def initialize(
     sparql_endpoint: ENV.fetch("ARTSDATA_SPARQL_ENDPOINT", "https://api.artsdata.ca/query"),
     reconciliation_endpoint: ENV.fetch("ARTSDATA_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/match")
@@ -11,23 +15,44 @@ class ArtsdataClient
     @reconciliation_endpoint = reconciliation_endpoint
   end
 
-  def search_items(query:, lang:, limit:)
+  def search_items(query:, types:, lang:, limit:)
+
+    types_array = Array(types).compact
+    type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
+
+    conditions = [
+      {
+        matchType: "name",
+        propertyValue: query,
+        required: true
+      }
+    ]
+
+    if type_uris.size > 1
+      conditions << {
+        matchType: 'property',
+        propertyId: RDF_TYPE_PROPERTY_ID,
+        propertyValue: type_uris,
+        required: true,
+        matchQuantifier: 'any'
+      }
+
+      query_type = nil
+    else
+      query_type = type_uris.first
+    end
+
     payload = {
       queries: [
         {
           limit: limit,
-          conditions: [
-            {
-              matchType: "name",
-              propertyValue: query,
-              required: true
-            }
-          ]
-        }
+          type: query_type,
+          conditions: conditions
+        }.compact
       ]
     }
 
-    body = execute_reconciliation_query(payload, lang:)
+    body = execute_reconciliation_query(payload, lang: lang)
     format_search_results(body.fetch("results", []))
   end
 
