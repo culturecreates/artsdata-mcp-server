@@ -12,6 +12,6 @@ public APIs, so agents or users can search",
 
   MyTransport = MCP::Server::Transports::StreamableHTTPTransport.new(
     ArtsdataMCPServer,
-    allowed_hosts: ["mcp.artsdata.ca", "artsdata-mcp-server-8cb4262e2362.herokuapp.com"]
+    allowed_hosts: ["mcp.artsdata.ca"]
   )
 end
