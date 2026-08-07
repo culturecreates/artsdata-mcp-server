@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GetEntityRequest",
+  "description": "Request schema for the get_entity tool.",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "uri": {
+      "type": "string",
+      "format": "uri",
+      "description": "The Artsdata entity URI."
+    }
+  },
+  "required": [
+    "uri"
+  ],
+  "additionalProperties": false
+}
