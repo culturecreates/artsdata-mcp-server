@@ -6,7 +6,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
     @mcp_session_id = nil
   end
 
-  test "mcp initialize to search_entities flow follows protocol" do
+  test "mcp initialize to search_entities and get_entity flow follows protocol" do
 
     # MCP Initialize
     initialize_response = mcp_post(
@@ -52,6 +52,13 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
 
     # MCP search_entities
     fixture_results = load_fixture("search_entities_results.json")
+    searched_uri = fixture_results.first.fetch("uri")
+    fixture_entity = {
+      "id" => searched_uri.split("/").last,
+      "uri" => searched_uri,
+      "name" => [{ "value" => "Festival Example", "language" => "en" }],
+      "sameAs" => ["https://example.org/festival"]
+    }
     mock_client = Minitest::Mock.new
 
     mock_client.expect(
@@ -60,6 +67,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       [],
       query: "festival", types: ["Organization"], lang: "en", limit: 2
     )
+    mock_client.expect(:get_entity, fixture_entity, [], uri: searched_uri)
 
     ArtsdataClient.stub(:new, mock_client) do
       search_entities_response = mcp_post(
@@ -85,6 +93,28 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
 
       text_content = search_entities_response.dig("result", "content", 0, "text")
       assert_equal({ "results" => fixture_results }, JSON.parse(text_content))
+
+      get_entity_response = mcp_post(
+        jsonrpc: "2.0",
+        id: 4,
+        method: "tools/call",
+        params: {
+          name: "get_entity",
+          arguments: {
+            uri: searched_uri
+          }
+        }
+      )
+
+      assert_response :success
+      assert_equal 4, get_entity_response.fetch("id")
+
+      get_entity_structured_content = get_entity_response.dig("result", "structuredContent")
+      assert_equal searched_uri, get_entity_structured_content.fetch("uri")
+      assert_equal searched_uri.split("/").last, get_entity_structured_content.fetch("id")
+
+      get_entity_text_content = get_entity_response.dig("result", "content", 0, "text")
+      assert_equal(get_entity_structured_content, JSON.parse(get_entity_text_content))
     end
 
     mock_client.verify
