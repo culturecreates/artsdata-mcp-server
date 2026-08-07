@@ -18,7 +18,7 @@ class GetEntity < MCP::Tool
     def call(uri:)
 
       result = ArtsdataClient.new.get_entity(uri:)
-      MCP::Tool::Response.new({ type: "text", text: JSON.generate(result) }, structured_content: result)
+      MCP::Tool::Response.new([{ type: "text", text: JSON.generate(result) }], structured_content: result)
     end
   end
 end
