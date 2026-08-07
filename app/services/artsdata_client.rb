@@ -9,7 +9,7 @@ class ArtsdataClient
 
   def initialize(
     sparql_endpoint: ENV.fetch("ARTSDATA_SPARQL_ENDPOINT", "https://api.artsdata.ca/query"),
-    reconciliation_endpoint: ENV.fetch("ARTSDATA_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/match")
+    reconciliation_endpoint: ENV.fetch("ARTSDATA_MATCH_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/")
   )
     @sparql_endpoint = sparql_endpoint
     @reconciliation_endpoint = reconciliation_endpoint
@@ -52,8 +52,51 @@ class ArtsdataClient
       ]
     }
 
-    body = execute_reconciliation_query(payload, lang: lang)
+    body = execute_reconciliation_query(payload, lang: lang, route: 'match')
     format_search_results(body.fetch("results", []))
+  end
+
+  def format_get_entity_results(rows)
+    item = rows.first
+    result = {
+      "id" => item["id"],
+      "uri" => "http://kg.artsdata.ca/resource/#{item['id']}"
+    }
+
+    item["properties"].each do |prop|
+      key = prop["id"]
+
+      result[key] = prop["values"].map do |val|
+        if val.key?("str")
+          obj = { "value" => val["str"] }
+          obj["language"] = val["lang"] if val.key?("lang")
+          obj
+        elsif val.key?("id")
+          val["id"]
+        else
+          val
+        end
+      end
+    end
+    result
+  end
+
+  def get_entity(uri:)
+
+    id = uri.split('/').last
+
+    payload = {
+      "ids": [id],
+      "properties": [
+        { "id": "name" },
+        { "id": "url" },
+        { "id": "sameAs" },
+        { "id": "disambiguatingDescription" }
+      ]
+    }
+
+    body = execute_reconciliation_query(payload, route: 'extend')
+    format_get_entity_results(body.fetch("rows", []))
   end
 
   def get_statements(entity_id:, lang:)
@@ -72,8 +115,6 @@ class ArtsdataClient
 
   private
 
-  attr_reader :sparql_endpoint, :reconciliation_endpoint
-
   def execute_query(query, variables = {})
     uri = URI.parse(sparql_endpoint)
     request = Net::HTTP::Post.new(uri)
@@ -91,8 +132,8 @@ class ArtsdataClient
     []
   end
 
-  def execute_reconciliation_query(payload, lang: "en")
-    uri = URI.parse(reconciliation_endpoint)
+  def execute_reconciliation_query(payload, lang: "en", route:)
+    uri = URI.parse(reconciliation_endpoint + route)
     request = Net::HTTP::Post.new(uri)
     request["Content-Type"] = "application/json"
     request["accept-language"] = lang
