@@ -10,5 +10,8 @@ public APIs, so agents or users can search",
   # prompts: [MyPrompt],
   )
 
-  MyTransport = MCP::Server::Transports::StreamableHTTPTransport.new(ArtsdataMCPServer)
+  MyTransport = MCP::Server::Transports::StreamableHTTPTransport.new(
+    ArtsdataMCPServer,
+    allowed_hosts: ["mcp.artsdata.ca"]
+  )
 end
