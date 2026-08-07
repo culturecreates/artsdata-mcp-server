@@ -83,7 +83,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       structured_content = search_entities_response.dig("result", "structuredContent")
       assert_equal({ "results" => fixture_results }, structured_content)
 
-      text_content = search_entities_response.dig("result", "content", "text")
+      text_content = search_entities_response.dig("result", "content", 0, "text")
       assert_equal({ "results" => fixture_results }, JSON.parse(text_content))
     end
 
