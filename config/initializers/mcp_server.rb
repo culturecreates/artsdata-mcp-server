@@ -6,7 +6,7 @@ Rails.application.config.to_prepare do
     version: "0.0.1",
     instructions: "Use the tools of this server, that acts as a thin, safe, LLM-friendly layer over Artsdata's existing
 public APIs, so agents or users can search",
-    tools: [SearchEntities],
+    tools: [SearchEntities, GetEntity],
   # prompts: [MyPrompt],
   )
 
