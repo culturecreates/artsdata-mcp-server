@@ -18,9 +18,10 @@ class SearchEntities < MCP::Tool
     def call(query:, types: [], language: 'en', limit: 50)
 
       result = ArtsdataClient.new.search_items(query:, types: types, lang: language, limit:)
+      structured_result = { results: result }
       MCP::Tool::Response.new(
-        { type: "text", text: JSON.generate(result) },
-        structured_content: result)
+        { type: "text", text: JSON.generate(structured_result) },
+        structured_content: structured_result)
     end
   end
 end

@@ -3,50 +3,59 @@
   "title": "SearchEntitiesResponse",
   "description": "Response schema for the search_entities tool.",
   "version": "1.0.0",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": [
-      "id",
-      "name",
-      "type",
-      "uri"
-    ],
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      },
-      "description": {
-        "type": "string"
-      },
-      "type": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": [
-            "id",
-            "name"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "format": "uri"
-            },
-            "name": {
-              "type": "string"
+  "type": "object",
+  "required": [
+    "results"
+  ],
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "uri"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
             }
           },
-          "additionalProperties": false
-        }
-      },
-      "uri": {
-        "type": "string",
-        "format": "uri"
+          "uri": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
       }
-    },
-    "additionalProperties": false
-  }
+    }
+  },
+  "additionalProperties": false
 }
