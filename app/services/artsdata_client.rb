@@ -7,11 +7,11 @@ class ArtsdataClient
   SCHEMA_BASE_URL = 'http://schema.org/'.freeze
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
 
+  attr_reader :reconciliation_endpoint
+
   def initialize(
-    sparql_endpoint: ENV.fetch("ARTSDATA_SPARQL_ENDPOINT", "https://api.artsdata.ca/query"),
     reconciliation_endpoint: ENV.fetch("ARTSDATA_MATCH_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/")
   )
-    @sparql_endpoint = sparql_endpoint
     @reconciliation_endpoint = reconciliation_endpoint
   end
 
@@ -99,20 +99,6 @@ class ArtsdataClient
     format_get_entity_results(body.fetch("rows", []))
   end
 
-  def get_statements(entity_id:, lang:)
-    sparql = <<~SPARQL
-      # Placeholder SPARQL query for entity statements.
-      # Replace with final Artsdata statement query once schema is confirmed.
-      SELECT ?entityLabel ?pid ?propertyLabel ?valueLabel ?valueQid ?literalValue WHERE {
-        # TODO: fetch all triples related to #{entity_id}.
-      }
-      LIMIT 200
-    SPARQL
-
-    rows = execute_query(sparql, entity_id: entity_id, lang: lang)
-    format_statement_results(rows, entity_id: entity_id)
-  end
-
   private
 
   def execute_query(query, variables = {})
@@ -133,7 +119,7 @@ class ArtsdataClient
   end
 
   def execute_reconciliation_query(payload, lang: "en", route:)
-    uri = URI.parse(reconciliation_endpoint + route)
+    uri = URI.join(reconciliation_endpoint, route)
     request = Net::HTTP::Post.new(uri)
     request["Content-Type"] = "application/json"
     request["accept-language"] = lang
@@ -162,28 +148,4 @@ class ArtsdataClient
     end
   end
 
-  def format_statement_results(rows, entity_id:)
-    rows.map do |row|
-      entity_label = value_for(row, "entityLabel")
-      property_label = value_for(row, "propertyLabel")
-      pid = value_for(row, "pid")
-      value_label = value_for(row, "valueLabel")
-      value_qid = value_for(row, "valueQid")
-      literal_value = value_for(row, "literalValue")
-
-      value = if value_label.empty?
-                literal_value
-              elsif value_qid.empty?
-                value_label
-              else
-                "#{value_label} (#{value_qid})"
-              end
-
-      "#{entity_label} (#{entity_id}): #{property_label} (#{pid}): #{value}".strip
-    end.compact.join("\n")
-  end
-
-  def value_for(row, key)
-    row.fetch(key, {}).fetch("value", "").to_s
-  end
 end
