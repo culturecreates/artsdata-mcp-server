@@ -3,7 +3,7 @@ require "json"
 
 class SearchEvents < MCP::Tool
 
-  description "Tool to search for events in the Artsdata knowledge graph by place, artist, organization,type and language."
+  description "Tool to search for events in the Artsdata knowledge graph by place, artist, organization, type and language."
 
   request_schema_path = File.expand_path("../schema/search_events_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
