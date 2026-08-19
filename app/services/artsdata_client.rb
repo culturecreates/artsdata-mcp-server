@@ -5,7 +5,12 @@ require "json"
 class ArtsdataClient
 
   SCHEMA_BASE_URL = 'http://schema.org/'.freeze
+  ARTSDATA_BASE_URL = 'http://kg.artsdata.ca/resource/'.freeze
+
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
+  LOCATION_NAME_PROPERTY_ID = 'schema:location/schema:name'.freeze
+  PERFORMER_NAME_PROPERTY_ID = 'schema:performer/schema:name'.freeze
+  ORGANIZER_NAME_PROPERTY_ID = 'schema:organizer/schema:name'.freeze
 
   attr_reader :reconciliation_endpoint
 
