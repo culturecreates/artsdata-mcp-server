@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SearchEventsRequest",
+  "description": "Request schema for the search_events tool.",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "places": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "Optional list of place label; can be empty."
+    },
+    "artists": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "Optional list of artist label; can be empty."
+    },
+    "organizations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "Optional list of organization label; can be empty."
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "Optional list of event type label; can be empty."
+    },
+    "languages": {
+      "type": "string",
+      "description": "Languages label; default is 'en'.",
+      "default": "en"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 25,
+      "description": "Number of results to return."
+    }
+  },
+  "additionalProperties": false
+}

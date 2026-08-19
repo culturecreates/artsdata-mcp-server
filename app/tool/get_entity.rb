@@ -3,7 +3,7 @@ require "json"
 
 class GetEntity < MCP::Tool
 
-  description "Tool to search for entities in the Artsdata knowledge graph by name and type(optional)."
+  description "Tool to get entities details from Artsdata Knowledge Graph by entity URI."
 
   request_schema_path = File.expand_path("../schema/get_entity_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
