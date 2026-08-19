@@ -38,12 +38,9 @@
       "description": "Optional list of event type label; can be empty."
     },
     "languages": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true,
-      "description": "Optional list of languages label; can be empty."
+      "type": "string",
+      "description": "Languages label; default is 'en'.",
+      "default": "en"
     },
     "limit": {
       "type": "integer",
