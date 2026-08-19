@@ -105,7 +105,77 @@ class ArtsdataClient
   end
 
   def search_events(places:, artists:, organizations:, types:, language:, limit:)
-    # code here
+    types_array = Array(types).compact
+    type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
+
+    # merge artists and organizations
+    agents = artists.union(organizations)
+
+    conditions = []
+    if places.size > 0
+      conditions.push({
+                        matchType: "property",
+                        propertyId: LOCATION_NAME_PROPERTY_ID,
+                        propertyValue: places,
+                        required: true,
+                        matchQuantifier: 'any'
+                      })
+    end
+
+    if agents.size > 0
+      conditions.push({
+                        matchType: "property",
+                        propertyId: ORGANIZER_NAME_PROPERTY_ID,
+                        propertyValue: agents,
+                        required: false,
+                        matchQuantifier: 'any'
+                      })
+
+      conditions.push({
+                        matchType: "property",
+                        propertyId: PERFORMER_NAME_PROPERTY_ID,
+                        propertyValue: agents,
+                        required: false,
+                        matchQuantifier: 'any'
+                      })
+    end
+
+    if type_uris.size == 0
+      query_type = "#{SCHEMA_BASE_URL}Event"
+    elsif type_uris.size > 1
+      conditions.push({
+                        matchType: 'property',
+                        propertyId: RDF_TYPE_PROPERTY_ID,
+                        propertyValue: type_uris,
+                        required: true,
+                        matchQuantifier: 'any'
+
+                      })
+
+      query_type = nil
+    else
+      query_type = type_uris.first
+    end
+
+    payload = {
+      queries: [
+        {
+          limit: limit,
+          type: query_type,
+          conditions: conditions
+        }.compact
+      ]
+    }
+
+    data = execute_reconciliation_query(payload, lang: language, route: 'match')
+
+    details = data["results"].flat_map do |result|
+      result["candidates"].presence&.map do |c|
+        get_entity(uri: "#{ARTSDATA_BASE_URL}#{c["id"]}")
+      end
+    end.compact
+
+    details
   end
 
   private
