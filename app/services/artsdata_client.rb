@@ -99,6 +99,10 @@ class ArtsdataClient
     format_get_entity_results(body.fetch("rows", []))
   end
 
+  def search_events(places:, artists:, organizations:, types:, language:, limit:)
+    # code here
+  end
+
   private
 
   def execute_query(query, variables = {})
