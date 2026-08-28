@@ -11,6 +11,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
     resource "*",
       headers: :any,
-      methods: %i[get options head]
+      expose: ["Mcp-Session-Id"],
+      methods: %i[get post options head delete]
   end
 end
