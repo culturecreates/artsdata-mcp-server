@@ -83,7 +83,7 @@ curl -X POST https://mcp.artsdata.ca/mcp \
     "method": "tools/call",
     "params": {
       "name": "get_entity",
-      "arguments": { "uri": "https://kg.artsdata.ca/resource/K11-70" }
+      "arguments": { "uri": "http://kg.artsdata.ca/resource/K11-70" }
     }
   }'
 ```
