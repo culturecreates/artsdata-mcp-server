@@ -193,7 +193,8 @@ class ArtsdataClient
 
     body = JSON.parse(response.body)
     body.fetch("results", {}).fetch("bindings", [])
-  rescue StandardError
+  rescue StandardError => e
+    Rails.logger.error("ArtsdataClient#execute_query failed: #{e.class}: #{e.message}")
     []
   end
 
@@ -211,7 +212,8 @@ class ArtsdataClient
     return {} unless response.is_a?(Net::HTTPSuccess)
 
     JSON.parse(response.body)
-  rescue StandardError
+  rescue StandardError => e
+    Rails.logger.error("ArtsdataClient#execute_reconciliation_query failed (route: #{route}): #{e.class}: #{e.message}")
     {}
   end
 

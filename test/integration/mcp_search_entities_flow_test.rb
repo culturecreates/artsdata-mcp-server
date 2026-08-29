@@ -2,10 +2,6 @@ require "test_helper"
 require "minitest/mock"
 
 class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
-  setup do
-    @mcp_session_id = nil
-  end
-
   test "mcp initialize to search_entities and get_entity flow follows protocol" do
 
     # MCP Initialize
@@ -22,7 +18,8 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal 1, initialize_response.fetch("id")
-    assert_not_nil @mcp_session_id
+    # Stateless transport: no Mcp-Session-Id is issued or required on subsequent requests.
+    assert_nil response.headers["Mcp-Session-Id"]
 
     # MCP notifications/initialized
     initialized_response = mcp_post(jsonrpc: "2.0", method: "notifications/initialized", params: {})
@@ -129,14 +126,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       "HTTP_HOST" => "127.0.0.1"
     }
 
-    # Pass the session ID header in later calls if captured
-    headers["HTTP_MCP_SESSION_ID"] = @mcp_session_id if @mcp_session_id.present?
-
     post "/mcp", params: payload.to_json, headers: headers
-
-    if @mcp_session_id === nil and response.headers["Mcp-Session-Id"].present?
-      @mcp_session_id = response.headers["Mcp-Session-Id"]
-    end
 
     body = response.body.to_s.strip
     return nil if body.empty?
