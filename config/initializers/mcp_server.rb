@@ -16,6 +16,7 @@ Rails.application.config.to_prepare do
 
   MyTransport = MCP::Server::Transports::StreamableHTTPTransport.new(
     ArtsdataMCPServer,
+    stateless: true,
     allowed_hosts: ["mcp.artsdata.ca"]
   )
 end

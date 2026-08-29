@@ -13,14 +13,18 @@ knowledge graph.
 https://mcp.artsdata.ca/mcp
 ```
 
-The server implements the MCP **Streamable HTTP** transport. Requests are
-JSON-RPC 2.0 messages sent via `POST`, and require an initialization
-handshake before any tool can be called.
+The server implements the MCP **Streamable HTTP** transport in **stateless**
+mode. Requests are JSON-RPC 2.0 messages sent via `POST`. The protocol still
+requires the client to send `initialize` before any other request, but the
+server does not persist a session afterward — no `Mcp-Session-Id` is issued,
+and none is expected on later requests. Each request (including `initialize`
+itself) is handled independently, since none of the tools depend on
+per-connection state.
 
 | | |
 |---|---|
 | Transport | Streamable HTTP (JSON-RPC 2.0 over `POST`) |
-| Protocol version | `2024-11-05` |
+| Protocol version | Negotiated per client. Any of `2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25`, `2026-07-28` is accepted and echoed back as-is; an unrecognized version falls back to the latest, `2026-07-28`. |
 | Auth | None (public) |
 
 ## Connecting a client
@@ -29,7 +33,7 @@ Most MCP-aware tools (Claude Code, Claude Desktop, etc.) can connect directly
 by pointing an MCP client configuration at the endpoint above — no manual
 handshake required. For a custom/manual client, the flow is:
 
-### 1. Initialize a session
+### 1. Send the `initialize` handshake
 
 ```bash
 curl -i -X POST https://mcp.artsdata.ca/mcp \
@@ -40,15 +44,16 @@ curl -i -X POST https://mcp.artsdata.ca/mcp \
     "id": 1,
     "method": "initialize",
     "params": {
-      "protocolVersion": "2024-11-05",
+      "protocolVersion": "2025-06-18",
       "capabilities": {},
       "clientInfo": { "name": "my-client", "version": "1.0" }
     }
   }'
 ```
 
-The response includes an `mcp-session-id` header. Save it — every
-subsequent request must include it.
+The response does **not** include an `Mcp-Session-Id` header — the server is
+stateless, so there is no session to track and none to send back on later
+requests.
 
 ### 2. Send the `initialized` notification
 
@@ -56,7 +61,6 @@ subsequent request must include it.
 curl -X POST https://mcp.artsdata.ca/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -H "mcp-session-id: <SESSION_ID>" \
   -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
 ```
 
@@ -66,7 +70,6 @@ curl -X POST https://mcp.artsdata.ca/mcp \
 curl -X POST https://mcp.artsdata.ca/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -H "mcp-session-id: <SESSION_ID>" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
 ```
 
@@ -76,7 +79,6 @@ curl -X POST https://mcp.artsdata.ca/mcp \
 curl -X POST https://mcp.artsdata.ca/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -H "mcp-session-id: <SESSION_ID>" \
   -d '{
     "jsonrpc": "2.0",
     "id": 3,
