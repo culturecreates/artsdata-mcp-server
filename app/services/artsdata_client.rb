@@ -125,15 +125,9 @@ class ArtsdataClient
 
     conditions = []
 
-    if startDateFrom.length || startDateTo.length
+    if startDateFrom.present? || startDateTo.present?
 
-      property_value = if startDateFrom && startDateTo
-                         "#{startDateFrom}/#{startDateTo}"
-                       elsif startDateFrom
-                         "#{startDateFrom}/"
-                       elsif startDateTo
-                         "/#{startDateTo}"
-                       end
+      property_value = "#{startDateFrom}/#{startDateTo}" if startDateFrom.present? || startDateTo.present?
 
       conditions.push({
                         matchType: "property",
