@@ -65,36 +65,36 @@ class ArtsdataClient
   end
 
   def format_get_entity_results(rows)
-    item = rows.first
-    result = {
-      "id" => item["id"],
-      "uri" => "http://kg.artsdata.ca/resource/#{item['id']}"
-    }
+    rows.map do |item|
+      result = {
+        "id" => item["id"],
+        "uri" => "http://kg.artsdata.ca/resource/#{item['id']}"
+      }
 
-    item["properties"].each do |prop|
-      key = prop["id"]
+      item["properties"].each do |prop|
+        key = prop["id"]
 
-      result[key] = prop["values"].map do |val|
-        if val.key?("str")
-          obj = { "value" => val["str"] }
-          obj["language"] = val["lang"] if val.key?("lang")
-          obj
-        elsif val.key?("id")
-          val["id"]
-        else
-          val
+        result[key] = prop["values"].map do |val|
+          if val.key?("str")
+            obj = { "value" => val["str"] }
+            obj["language"] = val["lang"] if val.key?("lang")
+            obj
+          elsif val.key?("id")
+            val["id"]
+          else
+            val
+          end
         end
       end
+
+      result
     end
-    result
   end
 
-  def get_entity(uri:)
-
-    id = uri.split('/').last
+  def get_entity_by_extend_service(ids:)
 
     payload = {
-      "ids": [id],
+      "ids": ids,
       "properties": [
         { "id": "name" },
         { "id": "url" },
@@ -192,13 +192,11 @@ class ArtsdataClient
 
       data = execute_reconciliation_query(payload, lang: language, route: 'match')
 
-    details = data["results"].flat_map do |result|
-      result["candidates"].presence&.map do |c|
-        get_entity(uri: "#{ARTSDATA_BASE_URL}#{c["id"]}")
-      end
+    ids = data["results"].flat_map do |result|
+      result["candidates"].presence&.map { |c| c["id"] }
     end.compact
 
-    details
+    ids.empty? ? [] : get_entity_by_extend_service(ids:)
   end
 
   private
