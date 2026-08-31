@@ -15,9 +15,9 @@ class SearchEvents < MCP::Tool
   output_schema(RESPONSE_SCHEMA)
 
   class << self
-    def call(places: [], artists: [], organizations: [], types: [], language: 'en', limit: 25)
+    def call(startDateFrom:"", startDateTo:"", places: [], artists: [], organizations: [], types: [], language: 'en', limit: 25)
 
-      result = ArtsdataClient.new.search_events(places:, artists:, organizations:, types:, language:, limit:)
+      result = ArtsdataClient.new.search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:, types:, language:, limit:)
       structured_result = { results: result }
       MCP::Tool::Response.new(
         [{ type: "text", text: JSON.generate(structured_result) }],
