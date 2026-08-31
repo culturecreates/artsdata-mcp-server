@@ -5,6 +5,14 @@
   "version": "1.0.0",
   "type": "object",
   "properties": {
+    "startDateFrom": {
+      "type": "string",
+      "description": "Optional lower bound filter. Includes events starting on or after this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ)."
+    },
+    "startDateTo": {
+      "type": "string",
+      "description": "Optional upper bound filter. Includes events starting on or before this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ)."
+    },
     "places": {
       "type": "array",
       "items": {

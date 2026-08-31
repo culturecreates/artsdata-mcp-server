@@ -64,7 +64,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       [],
       query: "festival", types: ["Organization"], lang: "en", limit: 2
     )
-    mock_client.expect(:get_entity, fixture_entity, [], uri: searched_uri)
+    mock_client.expect(:get_entity_by_extend_service, fixture_entity, [], uri: searched_uri)
 
     ArtsdataClient.stub(:new, mock_client) do
       search_entities_response = mcp_post(

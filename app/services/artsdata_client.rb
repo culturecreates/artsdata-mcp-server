@@ -8,14 +8,17 @@ class ArtsdataClient
   ARTSDATA_BASE_URL = 'http://kg.artsdata.ca/resource/'.freeze
 
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
+  START_DATE_PROPERTY_ID = 'http://schema.org/startDate'.freeze
   LOCATION_NAME_PROPERTY_ID = 'schema:location/schema:name'.freeze
   PERFORMER_NAME_PROPERTY_ID = 'schema:performer/schema:name'.freeze
   ORGANIZER_NAME_PROPERTY_ID = 'schema:organizer/schema:name'.freeze
 
+  MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
+
   attr_reader :reconciliation_endpoint
 
   def initialize(
-    reconciliation_endpoint: ENV.fetch("ARTSDATA_MATCH_RECONCILIATION_ENDPOINT", "https://recon.artsdata.ca/")
+    reconciliation_endpoint: ENV.fetch("ARTSDATA_MATCH_RECONCILIATION_ENDPOINT", "https://staging-recon.artsdata.ca/")
   )
     @reconciliation_endpoint = reconciliation_endpoint
   end
@@ -62,41 +65,50 @@ class ArtsdataClient
   end
 
   def format_get_entity_results(rows)
-    item = rows.first
-    result = {
-      "id" => item["id"],
-      "uri" => "http://kg.artsdata.ca/resource/#{item['id']}"
-    }
+    rows.map do |item|
+      result = {
+        "id" => item["id"],
+        "uri" => "http://kg.artsdata.ca/resource/#{item['id']}"
+      }
 
-    item["properties"].each do |prop|
-      key = prop["id"]
+      item["properties"].each do |prop|
+        key = prop["id"]
 
-      result[key] = prop["values"].map do |val|
-        if val.key?("str")
-          obj = { "value" => val["str"] }
-          obj["language"] = val["lang"] if val.key?("lang")
-          obj
-        elsif val.key?("id")
-          val["id"]
-        else
-          val
+        result[key] = prop["values"].map do |val|
+          if val.key?("str")
+            obj = { "value" => val["str"] }
+            obj["language"] = val["lang"] if val.key?("lang")
+            obj
+          elsif val.key?("id")
+            val["id"]
+          else
+            val
+          end
         end
       end
+
+      result
     end
-    result
   end
 
-  def get_entity(uri:)
-
-    id = uri.split('/').last
+  def get_entity_by_extend_service(ids:)
 
     payload = {
-      "ids": [id],
+      "ids": ids,
       "properties": [
         { "id": "name" },
+        { "id": "startDate" },
+        { "id": "endDate" },
+        { "id": "disambiguatingDescription" },
+        { "id": "additionalType" },
         { "id": "url" },
         { "id": "sameAs" },
-        { "id": "disambiguatingDescription" }
+        { "id": "eventStatus" },
+        { "id": "eventAttendanceMode" },
+        { "id": "location" },
+        { "id": "offers" },
+        { "id": "performer" },
+        { "id": "organizer" }
       ]
     }
 
@@ -104,7 +116,7 @@ class ArtsdataClient
     format_get_entity_results(body.fetch("rows", []))
   end
 
-  def search_events(places:, artists:, organizations:, types:, language:, limit:)
+  def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:, types:, language:, limit:)
     types_array = Array(types).compact
     type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
 
@@ -112,6 +124,26 @@ class ArtsdataClient
     agents = artists.union(organizations)
 
     conditions = []
+
+    if startDateFrom.length || startDateTo.length
+
+      property_value = if startDateFrom && startDateTo
+                         "#{startDateFrom}/#{startDateTo}"
+                       elsif startDateFrom
+                         "#{startDateFrom}/"
+                       elsif startDateTo
+                         "/#{startDateTo}"
+                       end
+
+      conditions.push({
+                        matchType: "property",
+                        propertyId: START_DATE_PROPERTY_ID,
+                        propertyValue: property_value,
+                        required: true,
+                        matchQualifier: MATCH_QUALIFIER_DATE_RANGE_URI
+                      })
+    end
+
     if places.size > 0
       conditions.push({
                         matchType: "property",
@@ -167,15 +199,13 @@ class ArtsdataClient
       ]
     }
 
-    data = execute_reconciliation_query(payload, lang: language, route: 'match')
+      data = execute_reconciliation_query(payload, lang: language, route: 'match')
 
-    details = data["results"].flat_map do |result|
-      result["candidates"].presence&.map do |c|
-        get_entity(uri: "#{ARTSDATA_BASE_URL}#{c["id"]}")
-      end
+    ids = data["results"].flat_map do |result|
+      result["candidates"].presence&.map { |c| c["id"] }
     end.compact
 
-    details
+    ids.empty? ? [] : get_entity_by_extend_service(ids:)
   end
 
   private
