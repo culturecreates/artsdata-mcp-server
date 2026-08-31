@@ -97,9 +97,18 @@ class ArtsdataClient
       "ids": ids,
       "properties": [
         { "id": "name" },
+        { "id": "startDate" },
+        { "id": "endDate" },
+        { "id": "disambiguatingDescription" },
+        { "id": "additionalType" },
         { "id": "url" },
         { "id": "sameAs" },
-        { "id": "disambiguatingDescription" }
+        { "id": "eventStatus" },
+        { "id": "eventAttendanceMode" },
+        { "id": "location" },
+        { "id": "offers" },
+        { "id": "performer" },
+        { "id": "organizer" }
       ]
     }
 
