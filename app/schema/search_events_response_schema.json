@@ -3,102 +3,80 @@
   "title": "SearchEventsResponse",
   "description": "Response schema for the search_events tool.",
   "version": "1.0.0",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": [
-      "id",
-      "uri",
-      "name"
-    ],
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "uri": {
-        "type": "string",
-        "format": "uri"
-      },
-      "types": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/Concept"
-        }
-      },
-      "name": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/LocalizedString"
-        }
-      },
-      "alternate_names": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/LocalizedString"
-        }
-      },
-      "description": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/LocalizedString"
-        }
-      },
-      "main_entity_of_page": {
-        "type": "string",
-        "format": "uri"
-      },
-      "same_as": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "format": "uri"
-        }
-      },
-      "startDate": {
-        "type": "string",
-        "format": "date-time"
-      },
-      "endDate": {
-        "type": "string",
-        "format": "date-time"
-      },
-      "location": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "performer": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "organizer": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "eventStatus": {
-        "type": "string",
-        "format": "uri"
-      },
-      "eventAttendanceMode": {
-        "type": "string",
-        "format": "uri"
-      },
-      "additional_properties": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/AdditionalProperty"
-        }
+  "type": "object",
+  "required": [
+    "results"
+  ],
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the entity."
+          },
+          "uri": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI representing the entity."
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/typeItem"
+            }
+          },
+          "name": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/multiLingualString"
+            }
+          },
+          "alternate_names": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/multiLingualString"
+            }
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/multiLingualString"
+            }
+          },
+          "main_entity_of_page": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI of the main entity page."
+          },
+          "same_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "additional_properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/additionalProperty"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "uri",
+          "types",
+          "name"
+        ],
+        "additionalProperties": false
       }
-    },
-    "additionalProperties": true
+    }
   },
-  "$defs": {
-    "Concept": {
+  "additionalProperties": false,
+  "definitions": {
+    "typeItem": {
       "type": "object",
       "required": [
         "uri",
@@ -115,7 +93,7 @@
       },
       "additionalProperties": false
     },
-    "LocalizedString": {
+    "multiLingualString": {
       "type": "object",
       "required": [
         "value"
@@ -125,12 +103,13 @@
           "type": "string"
         },
         "language": {
-          "type": "string"
+          "type": "string",
+          "description": "BCP 47 language tag (e.g., 'en', 'fr')."
         }
       },
       "additionalProperties": false
     },
-    "AdditionalProperty": {
+    "additionalProperty": {
       "type": "object",
       "required": [
         "predicate",
@@ -138,7 +117,21 @@
       ],
       "properties": {
         "predicate": {
-          "$ref": "#/$defs/Concept"
+          "type": "object",
+          "required": [
+            "uri",
+            "label"
+          ],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "uri"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         },
         "values": {
           "type": "array",
