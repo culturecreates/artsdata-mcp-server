@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "SearchEntitiesResponse",
-  "description": "Response schema for the search_entities tool.",
+  "title": "SearchEventsResponse",
+  "description": "Response schema for the search_events tool.",
   "version": "1.0.0",
   "type": "array",
   "items": {
