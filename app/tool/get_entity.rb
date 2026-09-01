@@ -16,8 +16,8 @@ class GetEntity < MCP::Tool
 
   class << self
     def call(uri:)
-
-      result = ArtsdataClient.new.get_entity_by_extend_service(uri:)
+      ids = [uri.split('/').last]
+      result = ArtsdataClient.new.get_entity_by_extend_service(ids:).first
       MCP::Tool::Response.new([{ type: "text", text: JSON.generate(result) }], structured_content: result)
     end
   end
