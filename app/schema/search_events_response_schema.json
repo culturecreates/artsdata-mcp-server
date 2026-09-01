@@ -12,50 +12,135 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "type",
-          "uri"
-        ],
         "properties": {
           "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "type": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "name"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "name": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false
-            }
+            "type": "string",
+            "description": "Unique identifier of the entity."
           },
           "uri": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "description": "URI representing the entity."
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/typeItem"
+            }
+          },
+          "name": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/multiLingualString"
+            }
+          },
+          "alternate_names": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/multiLingualString"
+            }
+          },
+          "description": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/multiLingualString"
+            }
+          },
+          "main_entity_of_page": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI of the main entity page."
+          },
+          "same_as": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "additional_properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/additionalProperty"
+            }
           }
         },
+        "required": [
+          "id",
+          "uri",
+          "types",
+          "name"
+        ],
         "additionalProperties": false
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "definitions": {
+    "typeItem": {
+      "type": "object",
+      "required": [
+        "uri",
+        "label"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "multiLingualString": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string",
+          "description": "BCP 47 language tag (e.g., 'en', 'fr')."
+        }
+      },
+      "additionalProperties": false
+    },
+    "additionalProperty": {
+      "type": "object",
+      "required": [
+        "predicate",
+        "values"
+      ],
+      "properties": {
+        "predicate": {
+          "type": "object",
+          "required": [
+            "uri",
+            "label"
+          ],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "uri"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }
