@@ -1,61 +1,153 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "SearchEventsResponse",
-  "description": "Response schema for the search_events tool.",
+  "title": "SearchEntitiesResponse",
+  "description": "Response schema for the search_entities tool.",
   "version": "1.0.0",
-  "type": "object",
-  "required": [
-    "results"
-  ],
-  "properties": {
-    "results": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "type",
-          "uri"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "type": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "name"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "name": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "uri": {
-            "type": "string",
-            "format": "uri"
-          }
-        },
-        "additionalProperties": false
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "uri",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "uri": {
+        "type": "string",
+        "format": "uri"
+      },
+      "types": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/Concept"
+        }
+      },
+      "name": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/LocalizedString"
+        }
+      },
+      "alternate_names": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/LocalizedString"
+        }
+      },
+      "description": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/LocalizedString"
+        }
+      },
+      "main_entity_of_page": {
+        "type": "string",
+        "format": "uri"
+      },
+      "same_as": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "startDate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "endDate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "location": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "performer": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "organizer": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "eventStatus": {
+        "type": "string",
+        "format": "uri"
+      },
+      "eventAttendanceMode": {
+        "type": "string",
+        "format": "uri"
+      },
+      "additional_properties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/AdditionalProperty"
+        }
       }
-    }
+    },
+    "additionalProperties": true
   },
-  "additionalProperties": false
+  "$defs": {
+    "Concept": {
+      "type": "object",
+      "required": [
+        "uri",
+        "label"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LocalizedString": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AdditionalProperty": {
+      "type": "object",
+      "required": [
+        "predicate",
+        "values"
+      ],
+      "properties": {
+        "predicate": {
+          "$ref": "#/$defs/Concept"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }
