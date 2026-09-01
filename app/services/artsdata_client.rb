@@ -64,28 +64,46 @@ class ArtsdataClient
     format_search_results(body.fetch("results", []))
   end
 
-  def format_get_entity_results(rows)
-    rows.map do |item|
+  def format_get_entity_results(input_data)
+    # Helpers to format recurring schema structures
+    parse_loc_str = ->(vals) { vals.map { |v| { "value" => v["str"] || "" }.tap { |h| h["language"] = v["lang"] if v["lang"] } } }
+    extract_val = ->(vals) { vals.filter_map { |v| v["str"] || v["id"] } }
+
+    input_data.map do |entity|
+      props = (entity["properties"] || []).group_by { |p| p["id"] }
+
       result = {
-        "id" => item["id"],
-        "uri" => "http://kg.artsdata.ca/resource/#{item['id']}"
+        "id" => entity["id"],
+        "uri" => "#{ARTSDATA_BASE_URL}#{entity["id"]}",
+        "types" => (props["type"] || props["@type"])&.flat_map do |p|
+          p["values"].map { |v| { "uri" => v["id"] || "http://schema.org/#{v['str']}", "label" => v["str"] || v["id"]&.split('/')&.last } }
+        end || [{ "uri" => "http://schema.org/Thing", "label" => "Thing" }],
+        "name" => props["name"] ? parse_loc_str.call(props["name"].first["values"]) : []
       }
 
-      item["properties"].each do |prop|
-        key = prop["id"]
-
-        result[key] = prop["values"].map do |val|
-          if val.key?("str")
-            obj = { "value" => val["str"] }
-            obj["language"] = val["lang"] if val.key?("lang")
-            obj
-          elsif val.key?("id")
-            val["id"]
-          else
-            val
-          end
-        end
+      # Optional schema attributes
+      if (alts = props["alternateName"] || props["alternate_names"])
+        result["alternate_names"] = parse_loc_str.call(alts.first["values"])
       end
+      if (descs = props["description"] || props["disambiguatingDescription"])
+        result["description"] = parse_loc_str.call(descs.first["values"])
+      end
+      if (url = (props["url"] || props["mainEntityOfPage"])&.first&.dig("values", 0, "str"))
+        result["main_entity_of_page"] = url
+      end
+      if (same = props["sameAs"])
+        result["same_as"] = extract_val.call(same.first["values"])
+      end
+
+      # Unmapped properties -> additional_properties
+      known_keys = %w[name alternateName alternate_names description disambiguatingDescription url mainEntityOfPage sameAs type @type ]
+      extra_props = props.except(*known_keys).map do |prop_id, items|
+        {
+          "predicate" => { "uri" => "http://schema.org/#{prop_id}", "label" => prop_id },
+          "values" => items.flat_map { |item| extract_val.call(item["values"]) }
+        }
+      end
+      result["additional_properties"] = extra_props unless extra_props.empty?
 
       result
     end
@@ -115,7 +133,6 @@ class ArtsdataClient
     body = execute_reconciliation_query(payload, route: 'extend')
     format_get_entity_results(body.fetch("rows", []))
   end
-
   def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:, types:, language:, limit:)
     types_array = Array(types).compact
     type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
