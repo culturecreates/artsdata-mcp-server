@@ -77,7 +77,6 @@ class ArtsdataClient
       "main_entity_of_page" => %w[url mainEntityOfPage],
       "start_date"           => %w[startDate],
       "end_date"             => %w[endDate],
-
     }
     single_id_fields = {
       "event_status"         => %w[eventStatus],
@@ -89,7 +88,7 @@ class ArtsdataClient
     }
     entity_ref_fields = %w[performer organizer location]
 
-    known_keys = %w[name] + loc_str_fields.values.flatten +
+    known_keys = %w[name type] + loc_str_fields.values.flatten +
                  single_str_fields.values.flatten + single_id_fields.values.flatten +
                  value_list_fields.values.flatten + entity_ref_fields
 
@@ -97,10 +96,29 @@ class ArtsdataClient
       props = (entity["properties"] || []).group_by { |p| p["id"] }
       values_for = ->(ids) { ids.map { |id| props[id] }.compact.first&.first&.fetch("values", nil) }
 
+      # Parse and construct the required `types` array
+      type_vals = values_for.call(["type"])
+      parsed_types = if type_vals
+                       type_vals.filter_map do |v|
+                         uri = v["id"] || v["str"]
+                         next unless uri
+                         label = uri.split("/").last || uri
+                         { "uri" => uri, "label" => label }
+                       end
+                     else
+                       []
+                     end
+
+      # Fallback to default Event type if list is empty
+      if parsed_types.empty?
+        parsed_types = [{ "uri" => "http://schema.org/Event", "label" => "Event" }]
+      end
+
       result = {
-        "id" => entity["id"],
-        "uri" => "#{ARTSDATA_BASE_URL}#{entity["id"]}",
-        "name" => props["name"] ? parse_loc_str.call(props["name"].first["values"]) : []
+        "id"    => entity["id"],
+        "uri"   => "#{ARTSDATA_BASE_URL}#{entity["id"]}",
+        "types" => parsed_types,
+        "name"  => props["name"] ? parse_loc_str.call(props["name"].first["values"]) : []
       }
 
       loc_str_fields.each do |key, ids|
@@ -131,7 +149,7 @@ class ArtsdataClient
       extra_props = props.except(*known_keys).map do |prop_id, items|
         {
           "predicate" => { "uri" => "http://schema.org/#{prop_id}", "label" => prop_id },
-          "values" => items.flat_map { |item| extract_val.call(item["values"]) }
+          "values"    => items.flat_map { |item| extract_val.call(item["values"]) }
         }
       end
       result["additional_properties"] = extra_props unless extra_props.empty?
@@ -146,6 +164,7 @@ class ArtsdataClient
       "ids": ids,
       "properties": [
         { "id": "name" },
+        { "id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" },
         { "id": "startDate" },
         { "id": "endDate" },
         { "id": "disambiguatingDescription" },
