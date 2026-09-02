@@ -24,7 +24,7 @@ per-connection state.
 | | |
 |---|---|
 | Transport | Streamable HTTP (JSON-RPC 2.0 over `POST`) |
-| Protocol version | Negotiated per client. Any of `2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25`, `2026-07-28` is accepted and echoed back as-is; an unrecognized version falls back to the latest, `2026-07-28`. |
+| Protocol version | Negotiated per client via the `initialize` handshake. Any of `2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25` is accepted and echoed back as-is; an unrecognized version (including the modern `2026-07-28`, which is only reachable via per-request `_meta`, not the handshake) falls back to the latest handshake version, `2025-11-25`. |
 | Auth | None (public) |
 
 ## Connecting a client
@@ -200,6 +200,8 @@ organization, type, and language.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
+| `startDateFrom` | string (ISO 8601) | No | Lower bound filter; includes events starting on or after this date/time. |
+| `startDateTo` | string (ISO 8601) | No | Upper bound filter; includes events starting on or before this date/time. |
 | `places` | array of strings | No | Place labels to filter by. |
 | `artists` | array of strings | No | Artist labels to filter by. |
 | `organizations` | array of strings | No | Organization labels to filter by. |
@@ -209,15 +211,25 @@ organization, type, and language.
 
 **Output**
 
+Each matching event is returned in the same detailed shape as `get_entity`
+(the tool internally resolves matches to full entity records):
+
 ```json
 {
   "results": [
     {
       "id": "string",
-      "name": "string",
-      "description": "string",
-      "type": [ { "id": "uri", "name": "string" } ],
-      "uri": "uri"
+      "uri": "uri",
+      "types": [ { "uri": "uri", "label": "string" } ],
+      "name": [ { "value": "string", "language": "en|fr" } ],
+      "description": [ { "value": "string", "language": "en|fr" } ],
+      "main_entity_of_page": "uri",
+      "additional_properties": [
+        {
+          "predicate": { "uri": "uri", "label": "string" },
+          "values": ["string"]
+        }
+      ]
     }
   ]
 }
@@ -229,8 +241,7 @@ organization, type, and language.
 {
   "name": "search_events",
   "arguments": {
-    "places": ["Montreal"],
-    "types": ["Theatre"],
+    "organizations": ["Cirque du Soleil"],
     "limit": 10
   }
 }
