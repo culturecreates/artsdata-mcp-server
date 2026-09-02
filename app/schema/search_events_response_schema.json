@@ -25,25 +25,25 @@
           "types": {
             "type": "array",
             "items": {
-              "$ref": "#/definitions/typeItem"
+              "$ref": "#/$defs/typeItem"
             }
           },
           "name": {
             "type": "array",
             "items": {
-              "$ref": "#/definitions/multiLingualString"
+              "$ref": "#/$defs/multiLingualString"
             }
           },
           "alternate_names": {
             "type": "array",
             "items": {
-              "$ref": "#/definitions/multiLingualString"
+              "$ref": "#/$defs/multiLingualString"
             }
           },
           "description": {
             "type": "array",
             "items": {
-              "$ref": "#/definitions/multiLingualString"
+              "$ref": "#/$defs/multiLingualString"
             }
           },
           "main_entity_of_page": {
@@ -57,10 +57,74 @@
               "type": "string"
             }
           },
+          "start_date": {
+            "description": "Start date or start date-time of an event (ISO 8601).",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          },
+          "end_date": {
+            "description": "End date or end date-time of an event (ISO 8601).",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          },
+          "event_status": {
+            "type": "string",
+            "format": "uri",
+            "description": "Status of the event, it can one from the enumeration members of https://schema.org/EventStatusType"
+          },
+          "event_attendance_mode": {
+            "type": "string",
+            "format": "uri",
+            "description": "Attendance mode of the event, it can one from the enumeration members of https://schema.org/EventAttendanceModeEnumeration"
+          },
+          "organizer": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/uriList"
+            },
+            "description": "List of organizer URIs"
+          },
+          "performer": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/uriList"
+            },
+            "description": "List of performer URIs"
+          },
+          "location": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/uriList"
+            },
+            "description": "List of location URIs"
+          },
+          "additional_type": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/uriList"
+            },
+            "description": "List of additional Type URIs"
+          },
           "additional_properties": {
             "type": "array",
             "items": {
-              "$ref": "#/definitions/additionalProperty"
+              "$ref": "#/$defs/additionalProperty"
             }
           }
         },
@@ -75,7 +139,7 @@
     }
   },
   "additionalProperties": false,
-  "definitions": {
+  "$defs": {
     "typeItem": {
       "type": "object",
       "required": [
@@ -92,6 +156,10 @@
         }
       },
       "additionalProperties": false
+    },
+    "uriList": {
+      "type": "string",
+      "format": "uri"
     },
     "multiLingualString": {
       "type": "object",
