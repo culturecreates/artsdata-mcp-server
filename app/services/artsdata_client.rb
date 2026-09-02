@@ -18,7 +18,7 @@ class ArtsdataClient
   attr_reader :reconciliation_endpoint
 
   def initialize(
-    reconciliation_endpoint: ENV.fetch("ARTSDATA_RECONCILIATION_ENDPOINT", "https://staging-recon.artsdata.ca/")
+    reconciliation_endpoint: ENV.fetch("ARTSDATA_RECONCILIATION_ENDPOINT")
   )
     @reconciliation_endpoint = reconciliation_endpoint
   end
