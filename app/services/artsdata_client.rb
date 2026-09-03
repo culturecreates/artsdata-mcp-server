@@ -65,42 +65,91 @@ class ArtsdataClient
   end
 
   def format_get_entity_results(input_data)
-    # Helpers to format recurring schema structures
     parse_loc_str = ->(vals) { vals.map { |v| { "value" => v["str"] || "" }.tap { |h| h["language"] = v["lang"] if v["lang"] } } }
-    extract_val = ->(vals) { vals.filter_map { |v| v["str"] || v["id"] } }
+    extract_val   = ->(vals) { vals.filter_map { |v| v["str"] || v["id"] } }
+    to_uris       = ->(ids) { ids.map { |id| "#{ARTSDATA_BASE_URL}#{id}" } }
+
+    loc_str_fields = {
+      "alternate_names"           => %w[alternateName],
+      "description"               => %w[description disambiguatingDescription],
+    }
+    single_str_fields = {
+      "main_entity_of_page" => %w[url mainEntityOfPage],
+      "start_date"           => %w[startDate],
+      "end_date"             => %w[endDate],
+    }
+    single_id_fields = {
+      "event_status"         => %w[eventStatus],
+      "event_attendance_mode" => %w[eventAttendanceMode],
+    }
+    value_list_fields = {
+      "same_as"         => %w[sameAs],
+      "additional_type" => %w[additionalType],
+    }
+    entity_ref_fields = %w[performer organizer location]
+
+    known_keys = %w[name type] + loc_str_fields.values.flatten +
+                 single_str_fields.values.flatten + single_id_fields.values.flatten +
+                 value_list_fields.values.flatten + entity_ref_fields
 
     input_data.map do |entity|
       props = (entity["properties"] || []).group_by { |p| p["id"] }
+      values_for = ->(ids) { ids.map { |id| props[id] }.compact.first&.first&.fetch("values", nil) }
+
+      # Parse and construct the required `types` array
+      type_vals = values_for.call(["type"])
+      parsed_types = if type_vals
+                       type_vals.filter_map do |v|
+                         uri = v["id"] || v["str"]
+                         next unless uri
+                         label = uri.split("/").last || uri
+                         { "uri" => uri, "label" => label }
+                       end
+                     else
+                       []
+                     end
+
+      # Fallback to default Event type if list is empty
+      if parsed_types.empty?
+        parsed_types = [{ "uri" => "http://schema.org/Event", "label" => "Event" }]
+      end
 
       result = {
-        "id" => entity["id"],
-        "uri" => "#{ARTSDATA_BASE_URL}#{entity["id"]}",
-        "types" => (props["type"] || props["@type"])&.flat_map do |p|
-          p["values"].map { |v| { "uri" => v["id"] || "http://schema.org/#{v['str']}", "label" => v["str"] || v["id"]&.split('/')&.last } }
-        end || [{ "uri" => "http://schema.org/Thing", "label" => "Thing" }],
-        "name" => props["name"] ? parse_loc_str.call(props["name"].first["values"]) : []
+        "id"    => entity["id"],
+        "uri"   => "#{ARTSDATA_BASE_URL}#{entity["id"]}",
+        "types" => parsed_types,
+        "name"  => props["name"] ? parse_loc_str.call(props["name"].first["values"]) : []
       }
 
-      # Optional schema attributes
-      if (alts = props["alternateName"] || props["alternate_names"])
-        result["alternate_names"] = parse_loc_str.call(alts.first["values"])
-      end
-      if (descs = props["description"] || props["disambiguatingDescription"])
-        result["description"] = parse_loc_str.call(descs.first["values"])
-      end
-      if (url = (props["url"] || props["mainEntityOfPage"])&.first&.dig("values", 0, "str"))
-        result["main_entity_of_page"] = url
-      end
-      if (same = props["sameAs"])
-        result["same_as"] = extract_val.call(same.first["values"])
+      loc_str_fields.each do |key, ids|
+        vals = values_for.call(ids)
+        result[key] = parse_loc_str.call(vals) if vals
       end
 
-      # Unmapped properties -> additional_properties
-      known_keys = %w[name alternateName alternate_names description disambiguatingDescription url mainEntityOfPage sameAs type @type ]
+      single_str_fields.each do |key, ids|
+        val = values_for.call(ids)&.dig(0, "str")
+        result[key] = val if val
+      end
+
+      single_id_fields.each do |key, ids|
+        val = values_for.call(ids)&.dig(0, "id")
+        result[key] = val if val
+      end
+
+      value_list_fields.each do |key, ids|
+        vals = values_for.call(ids)
+        result[key] = extract_val.call(vals) if vals
+      end
+
+      entity_ref_fields.each do |key|
+        vals = values_for.call([key])
+        result[key] = to_uris.call(extract_val.call(vals)) if vals
+      end
+
       extra_props = props.except(*known_keys).map do |prop_id, items|
         {
           "predicate" => { "uri" => "http://schema.org/#{prop_id}", "label" => prop_id },
-          "values" => items.flat_map { |item| extract_val.call(item["values"]) }
+          "values"    => items.flat_map { |item| extract_val.call(item["values"]) }
         }
       end
       result["additional_properties"] = extra_props unless extra_props.empty?
@@ -115,6 +164,7 @@ class ArtsdataClient
       "ids": ids,
       "properties": [
         { "id": "name" },
+        { "id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" },
         { "id": "startDate" },
         { "id": "endDate" },
         { "id": "disambiguatingDescription" },
