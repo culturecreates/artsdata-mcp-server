@@ -45,9 +45,9 @@
       "uniqueItems": true,
       "description": "Optional list of event type label; can be empty."
     },
-    "languages": {
+    "language": {
       "type": "string",
-      "description": "Languages label; default is 'en'.",
+      "description": "Language label; default is 'en'.",
       "default": "en"
     },
     "limit": {
