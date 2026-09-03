@@ -2,13 +2,31 @@ require "test_helper"
 require "minitest/mock"
 
 class ArtsdataClientTest < ActiveSupport::TestCase
-  test "get_entity_by_extend_service accepts a uri keyword" do
+
+  test "get_entity_by_extend_service accepts an ids keyword and returns one formatted entity per row" do
     ids = ["K11-23"]
-    result = ArtsdataClient.new.get_entity_by_extend_service(ids: ids)
+    client = ArtsdataClient.new
+    extend_response = {
+      "rows" => [
+        {
+          "id" => "K11-23",
+          "properties" => [
+            { "id" => "name", "values" => [{ "str" => "Test Organization", "lang" => "en" }] },
+            { "id" => "type", "values" => [{ "id" => "http://schema.org/Organization" }] }
+          ]
+        }
+      ]
+    }
+
+    result = client.stub(:execute_reconciliation_query, ->(_payload, **_options) { extend_response }) do
+      client.get_entity_by_extend_service(ids: ids)
+    end
+
     assert_equal ids.first, result.first.fetch("id", nil)
+    assert_equal "http://kg.artsdata.ca/resource/K11-23", result.first.fetch("uri", nil)
 
   rescue ArgumentError => e
-    flunk "get_entity_by_extend_service does not accept `uri:` (it only accepts `ids:`): #{e.message}"
+    flunk "get_entity_by_extend_service does not accept `ids:`: #{e.message}"
   end
 
   test "search_events combines the match and extend reconciliation responses into formatted results" do
@@ -59,5 +77,9 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     end
 
     assert_equal expected_result, result
+  end
+
+  test "format_get_entity_results returns an empty array when given no rows" do
+    assert_equal [], ArtsdataClient.new.format_get_entity_results([])
   end
 end
