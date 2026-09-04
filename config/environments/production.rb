@@ -5,6 +5,9 @@ Rails.application.configure do
 
   ENV['ARTSDATA_RECONCILIATION_ENDPOINT'] ||= 'https://recon.artsdata.ca/'
 
+  ENV['ARTSDATA_DUMPS_BUCKET_URL'] ||= 'https://artsdata-graphdb-backups.s3.ca-central-1.amazonaws.com'
+  ENV['ARTSDATA_DUMP_PREFIX'] ||= 'core-graph-minus-provenance/monthly/'
+
   # Code is not reloaded between requests.
   config.enable_reloading = false
 
