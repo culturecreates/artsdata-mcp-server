@@ -5,7 +5,7 @@ Rails.application.configure do
   ENV['ARTSDATA_RECONCILIATION_ENDPOINT'] ||= 'https://staging-recon.artsdata.ca/'
 
   ENV['ARTSDATA_DUMPS_BUCKET_URL'] ||= 'https://artsdata-graphdb-backups.s3.ca-central-1.amazonaws.com'
-  ENV['ARTSDATA_DUMP_PREFIX'] ||= 'core-graph-minus-provenance/monthly/'
+  ENV['ARTSDATA_DUMP_FOLDER'] ||= 'core-graph-minus-provenance/monthly/'
 
 
   # In the development environment your application's code is reloaded any time
