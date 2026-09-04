@@ -10,7 +10,9 @@ Rails.application.config.to_prepare do
       GetEntity, # get entity details by uri
       SearchEvents, # search for events by place, artist, organization, type and language
     ],
-    resources: [],
+    resources: [
+      ArtsdataDump, # manifest (metadata + download URL) for the artsdata dump
+    ],
     prompts: []
   )
 
