@@ -19,6 +19,20 @@ bundle install
 
 Both endpoints return JSON in MCP-style payloads with a `tool`, `result`, and `arguments`.
 
+## MCP resources
+
+- `artsdata://dumps/core-minus-provenance/latest` (`artsdata_dump`): manifest for the
+  latest Artsdata core-minus-provenance dump — the core graph with provenance and
+  RDF-star annotations removed, published monthly as a gzipped Turtle file.
+
+  `resources/read` asks the Artsdata Databus for the newest version of the artifact
+  (`GET /databus/artifact/latest?artifact=<ARTIFACT_URI>`) and returns a small JSON
+  document with the download URL, version, format and compression — never the dump
+  contents. Going through the Databus means MCP clients need to know nothing about
+  where the file is actually stored. Clients download the file from `downloadUrl` and
+  compare `version` across reads to detect when a new dump lands.
+
+
 ## Directory structure
 
 ```text
@@ -40,10 +54,11 @@ test/
 
 ## Configuration
 
-- `ARTSDATA_SPARQL_ENDPOINT` (optional): configurable SPARQL endpoint URL.
-- `ARTSDATA_RECONCILIATION_ENDPOINT` (optional): configurable reconciliation
+- `ARTSDATA_RECONCILIATION_ENDPOINT`: configurable reconciliation
   endpoint URL for `/search-entities`.
 - `ARTSDATA_CORS_ORIGINS` (optional): comma-separated CORS origins (default `*`).
+- `ARTSDATA_API_ENDPOINT` (optional): base URL of the Artsdata API, used to query the
+  Databus for the latest data dump (default `https://api.artsdata.ca`).
 - SPARQL query template for `/entities` is currently a placeholder in
   `app/services/artsdata_client.rb`.
 - Docker instance profiles are provided in:

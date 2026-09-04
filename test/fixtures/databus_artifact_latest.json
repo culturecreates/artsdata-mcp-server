@@ -1,0 +1,9 @@
+{
+  "artifacts": [
+    {
+      "artifact": "http://kg.artsdata.ca/databus/culture-creates/artsdata-dump/core-minus-provenance",
+      "file": "https://artsdata-graphdb-backups.s3.ca-central-1.amazonaws.com/core-graph-minus-provenance/monthly/artsdata-2026-09-01-core-minus-provenance.ttl.gz",
+      "latestVersion": "2026-09-01T05_18_57"
+    }
+  ]
+}
