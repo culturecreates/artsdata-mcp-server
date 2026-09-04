@@ -19,16 +19,6 @@ bundle install
 
 Both endpoints return JSON in MCP-style payloads with a `tool`, `result`, and `arguments`.
 
-## MCP resources
-
-- `artsdata://dump` (`artsdata_dump`): manifest for the latest complete data dump.
-  Dumps are gzipped Turtle files (`artsdata-YYYY-MM-DD-core-minus-provenance.ttl.gz`)
-  published to a public S3 bucket on the first day of each month. `resources/read` lists
-  the bucket prefix anonymously (S3 `ListObjectsV2`, no credentials), picks the object with
-  the newest `LastModified`, and returns a small JSON document with its download URL, size,
-  ETag, last-modified and a `version` token — never the dump contents. Clients download
-  the file from `dump.url` and compare `dump.version` across reads to detect a new dump.
-
 ## Directory structure
 
 ```text
@@ -50,13 +40,10 @@ test/
 
 ## Configuration
 
-- `ARTSDATA_RECONCILIATION_ENDPOINT`: configurable reconciliation
+- `ARTSDATA_SPARQL_ENDPOINT` (optional): configurable SPARQL endpoint URL.
+- `ARTSDATA_RECONCILIATION_ENDPOINT` (optional): configurable reconciliation
   endpoint URL for `/search-entities`.
 - `ARTSDATA_CORS_ORIGINS` (optional): comma-separated CORS origins (default `*`).
-- `ARTSDATA_DUMPS_BUCKET_URL` : base URL of the public S3 bucket holding the
-  data dumps.
-- `ARTSDATA_DUMP_FOLDER` : folder name that contains latest dump inside the
-  bucket.
 - SPARQL query template for `/entities` is currently a placeholder in
   `app/services/artsdata_client.rb`.
 - Docker instance profiles are provided in:
