@@ -9,7 +9,7 @@ require "json"
 # (re)fetch it - last-modified.
 # Clients compare `last-modified` across reads to detect when a new dump lands.
 class ArtsdataDump < MCP::Resource
-  RESOURCE_URI = "artsdata://dumps/core".freeze
+  RESOURCE_URI = "artsdata://dump".freeze
   MANIFEST_MIME_TYPE = "application/json".freeze
 
   uri RESOURCE_URI
