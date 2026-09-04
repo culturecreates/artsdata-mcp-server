@@ -3,6 +3,8 @@ require "minitest/mock"
 
 class ArtsdataClientTest < ActiveSupport::TestCase
 
+  RECON_MATCH_FIXTURE_PATH = Rails.root.join("test", "fixtures", "search_entities_recon_match_results.json")
+
   test "get_entity_by_extend_service accepts an ids keyword and returns one formatted entity per row" do
     ids = ["K11-23"]
     client = ArtsdataClient.new
@@ -30,11 +32,6 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   end
 
   test "search_events combines the match and extend reconciliation responses into formatted results" do
-    # The "match" reconciliation query finds candidate entity ids; the "extend" query then
-    # fetches full details for those ids. Stub execute_reconciliation_query (the method that
-    # actually talks to the reconciliation service) to return canned responses for each route,
-    # so this test exercises the real search_events -> get_entity_by_extend_service ->
-    # format_get_entity_results pipeline without making a network call.
     match_response = {
       "results" => [
         { "candidates" => [{ "id" => "K1-1" }] }
@@ -81,5 +78,67 @@ class ArtsdataClientTest < ActiveSupport::TestCase
 
   test "format_get_entity_results returns an empty array when given no rows" do
     assert_equal [], ArtsdataClient.new.format_get_entity_results([])
+  end
+
+  test "search_items formats match candidates into search results" do
+
+    SEARCH_MATCH_RESPONSE = JSON.parse(File.read(RECON_MATCH_FIXTURE_PATH))
+
+    result = search_items_with_stubbed_reconciliation(
+      match_response: SEARCH_MATCH_RESPONSE, query: "festival", types: [], lang: "en", limit: 25
+    )
+
+    expected = [
+      {
+        "id" => "K11-23",
+        "name" => "Festival Example",
+        "description" => "Sample festival organization",
+        "type" => [{ "id" => "http://schema.org/Organization", "name" => "Organization" }],
+        "uri" => "http://kg.artsdata.ca/resource/K11-23"
+      },
+      {
+        "id" => "K11-24",
+        "name" => "Festival Hall",
+        "type" => [{ "id" => "http://schema.org/Place", "name" => "Place" }],
+        "uri" => "http://kg.artsdata.ca/resource/K11-24"
+      }
+    ]
+
+    assert_equal expected, result
+  end
+
+  test "search_items returns an empty array when the match response has no candidates" do
+    assert_equal [], search_items_with_stubbed_reconciliation(
+      match_response: { "results" => [{ "candidates" => [] }] },
+      query: "nothing", types: [], lang: "en", limit: 25
+    )
+    assert_equal [], search_items_with_stubbed_reconciliation(
+      match_response: { "results" => [] },
+      query: "nothing", types: [], lang: "en", limit: 25
+    )
+  end
+
+  test "search_items returns an empty array when the reconciliation service is unavailable" do
+
+    assert_equal [], search_items_with_stubbed_reconciliation(
+      match_response: {}, query: "festival", types: [], lang: "en", limit: 25
+    )
+  end
+
+  private
+
+  def search_items_with_stubbed_reconciliation(match_response:, captured: {}, **params)
+    client = ArtsdataClient.new
+
+    record_and_respond = lambda do |payload, **options|
+      captured[:payload] = payload
+      captured[:route] = options[:route]
+      captured[:lang] = options[:lang]
+      match_response
+    end
+
+    client.stub(:execute_reconciliation_query, record_and_respond) do
+      client.search_items(**params)
+    end
   end
 end
