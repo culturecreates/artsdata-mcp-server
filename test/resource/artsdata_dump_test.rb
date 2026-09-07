@@ -17,6 +17,7 @@ class ArtsdataDumpTest < ActiveSupport::TestCase
     manifest = with_stubbed_databus(DATABUS_ENTRY) { ArtsdataCoreMinusProvenanceDump.manifest }
 
     assert_equal({
+                   @context => ArtsdataCoreMinusProvenanceDump.context,
                    "uri" => RESOURCE_URI,
                    "type" => "ArtsdataDump",
                    "name" => "Artsdata core minus provenance",
