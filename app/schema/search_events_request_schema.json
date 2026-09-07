@@ -27,7 +27,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional list of artist label; can be empty."
+      "description": "Optional list of artists. Each entry is either an artist label (e.g. \"Jane Doe\") or an Artsdata URI (e.g. \"http://kg.artsdata.ca/resource/K1-1\"); labels and URIs can be mixed. Can be empty."
     },
     "organizations": {
       "type": "array",

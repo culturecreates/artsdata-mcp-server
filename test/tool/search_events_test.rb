@@ -87,6 +87,9 @@ class SearchEventsTest < ActiveSupport::TestCase
                  "a fully populated, in-range payload should satisfy the schema"
     assert_empty schema.validate({}).to_a,
                  "an empty payload should satisfy the schema, since every property is optional"
+    assert_empty schema.validate(
+      valid_payload.merge("artists" => ["Jane Doe", "http://kg.artsdata.ca/resource/K1-1"])
+    ).to_a, "the artists list may mix labels and URIs"
 
     refute_empty schema.validate(valid_payload.merge("limit" => 0)).to_a,
                  "limit below the schema minimum (1) should fail validation"
