@@ -56,6 +56,29 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
 
     def static_fields
       {
+        "@context": {
+          "schema": "https://schema.org/",
+          "dcat": "http://www.w3.org/ns/dcat#",
+          "dataid": "http://dataid.dbpedia.org/ns/core#",
+
+          "uri": "@id",
+          "type": {
+            "@id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+            "@type": "@id"
+          },
+          "name": "schema:name",
+          "description": "schema:description",
+          "version": "schema:version",
+          "content": "schema:disambiguatingDescription",
+          "format": "dcat:mediaType",
+          "compression": "dcat:compressionFormat",
+          "downloadUrl": {
+            "@id": "dcat:downloadURL",
+            "@type": "@id"
+          },
+          "artifactName": "dataid:artifactName",
+          "artifactUri": "dataid:artifact"
+        },
         "uri" => RESOURCE_URI,
         "type" => DUMP_TYPE,
         "name" => DUMP_NAME,
