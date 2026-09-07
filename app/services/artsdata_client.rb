@@ -10,8 +10,9 @@ class ArtsdataClient
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
   START_DATE_PROPERTY_ID = 'http://schema.org/startDate'.freeze
   LOCATION_NAME_PROPERTY_ID = 'schema:location/schema:name'.freeze
-  PERFORMER_NAME_PROPERTY_ID = 'schema:performer/schema:name'.freeze
-  ORGANIZER_NAME_PROPERTY_ID = 'schema:organizer/schema:name'.freeze
+
+  ORGANIZER_OR_PERFORMER_PROPERTY_ID = 'schema:organizer|schema:performer'.freeze
+  ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID = '(schema:organizer|schema:performer)/schema:name'.freeze
 
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
 
@@ -187,8 +188,8 @@ class ArtsdataClient
     types_array = Array(types).compact
     type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
 
-    # merge artists and organizations
-    agents = artists.union(organizations)
+    agents = Array(artists).compact.union(Array(organizations).compact)
+    agent_uris, agent_labels = agents.partition { |agent| agent.to_s.start_with?("http") }
 
     conditions = []
 
@@ -215,22 +216,12 @@ class ArtsdataClient
                       })
     end
 
-    if agents.size > 0
-      conditions.push({
-                        matchType: "property",
-                        propertyId: ORGANIZER_NAME_PROPERTY_ID,
-                        propertyValue: agents,
-                        required: false,
-                        matchQuantifier: 'any'
-                      })
+    if agent_labels.size > 0
+      conditions.push(agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels))
+    end
 
-      conditions.push({
-                        matchType: "property",
-                        propertyId: PERFORMER_NAME_PROPERTY_ID,
-                        propertyValue: agents,
-                        required: false,
-                        matchQuantifier: 'any'
-                      })
+    if agent_uris.size > 0
+      conditions.push(agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris))
     end
 
     if type_uris.size == 0
@@ -270,6 +261,18 @@ class ArtsdataClient
   end
 
   private
+
+  # An agent (artist or organizer) condition. These are `required: false` so that a match on
+  # any one of them - organizer or performer, by label or by URI - keeps the event.
+  def agent_condition(property_id, property_value)
+    {
+      matchType: "property",
+      propertyId: property_id,
+      propertyValue: property_value,
+      required: true,
+      matchQuantifier: 'any'
+    }
+  end
 
   def execute_query(query, variables = {})
     uri = URI.parse(sparql_endpoint)
