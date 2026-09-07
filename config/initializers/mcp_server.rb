@@ -4,7 +4,7 @@ Rails.application.config.to_prepare do
     name: "artsdata_mcp_server",
     title: "Artsdata MCP Server",
     version: "0.0.1",
-    instructions: "Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike",
+    instructions: "Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query",
     tools: [
       SearchEntities, # search for entities
       GetEntity, # get entity details by uri
