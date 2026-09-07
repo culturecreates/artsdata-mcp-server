@@ -93,8 +93,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     payload = search_events_with_captured_match_payload(artists: uris)
 
     assert_equal [
-                   agent_condition(ORGANIZER_PROPERTY_ID, uris),
-                   agent_condition(PERFORMER_PROPERTY_ID, uris)
+                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, uris)
                  ],
                  agent_conditions(payload),
                  "artist URIs should be matched on the organizer and performer properties, not the name ones"
@@ -107,8 +106,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_equal [
                    agent_condition(ORGANIZER_NAME_PROPERTY_ID, ["Jane Doe"]),
                    agent_condition(PERFORMER_NAME_PROPERTY_ID, ["Jane Doe"]),
-                   agent_condition(ORGANIZER_PROPERTY_ID, [uri]),
-                   agent_condition(PERFORMER_PROPERTY_ID, [uri])
+                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [uri])
                  ],
                  agent_conditions(payload),
                  "a mixed artists list should produce label conditions and URI conditions side by side"
@@ -125,8 +123,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_equal [
                    agent_condition(ORGANIZER_NAME_PROPERTY_ID, ["Jane Doe", "Some Org"]),
                    agent_condition(PERFORMER_NAME_PROPERTY_ID, ["Jane Doe", "Some Org"]),
-                   agent_condition(ORGANIZER_PROPERTY_ID, [artist_uri, org_uri]),
-                   agent_condition(PERFORMER_PROPERTY_ID, [artist_uri, org_uri])
+                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [artist_uri, org_uri])
                  ],
                  agent_conditions(payload)
   end
@@ -219,12 +216,12 @@ class ArtsdataClientTest < ActiveSupport::TestCase
 
   ORGANIZER_NAME_PROPERTY_ID = ArtsdataClient::ORGANIZER_NAME_PROPERTY_ID
   PERFORMER_NAME_PROPERTY_ID = ArtsdataClient::PERFORMER_NAME_PROPERTY_ID
-  ORGANIZER_PROPERTY_ID = ArtsdataClient::ORGANIZER_PROPERTY_ID
-  PERFORMER_PROPERTY_ID = ArtsdataClient::PERFORMER_PROPERTY_ID
+
+  ORGANIZER_OR_PERFORMER_PROPERTY_ID  = ArtsdataClient::ORGANIZER_OR_PERFORMER_PROPERTY_ID
 
   AGENT_PROPERTY_IDS = [
     ORGANIZER_NAME_PROPERTY_ID, PERFORMER_NAME_PROPERTY_ID,
-    ORGANIZER_PROPERTY_ID, PERFORMER_PROPERTY_ID
+    ORGANIZER_OR_PERFORMER_PROPERTY_ID
   ].freeze
 
   SEARCH_EVENTS_DEFAULT_PARAMS = {
@@ -258,7 +255,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
       matchType: "property",
       propertyId: property_id,
       propertyValue: property_value,
-      required: false,
+      required: true,
       matchQuantifier: "any"
     }
   end
