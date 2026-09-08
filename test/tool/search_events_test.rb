@@ -59,9 +59,19 @@ class SearchEventsTest < ActiveSupport::TestCase
           { "id" => "sameAs", "values" => [{ "id" => "http://wikidata.org/Q1" }] },
           { "id" => "eventStatus", "values" => [{ "id" => "http://schema.org/EventScheduled" }] },
           { "id" => "eventAttendanceMode", "values" => [{ "id" => "http://schema.org/OfflineEventAttendanceMode" }] },
-          { "id" => "location", "values" => [{ "id" => "Place1" }] },
-          { "id" => "performer", "values" => [{ "id" => "Person1" }] },
-          { "id" => "organizer", "values" => [{ "id" => "Organzaition1" }] }
+          { "id" => "location",
+            "values" => [{ "id" => "Place1",
+                           "properties" => [{ "id" => "name",
+                                              "values" => [{ "str" => "Test Place" },
+                                                           { "str" => "Test Place", "lang" => "en" }] }] }] },
+          { "id" => "performer",
+            "values" => [{ "id" => "Person1",
+                           "properties" => [{ "id" => "name",
+                                              "values" => [{ "str" => "Test Performer" }] }] }] },
+          { "id" => "organizer",
+            "values" => [{ "id" => "Organization1",
+                           "properties" => [{ "id" => "name",
+                                              "values" => [{ "str" => "Test Organization" }] }] }] }
         ]
       }
     ]
@@ -156,6 +166,31 @@ class SearchEventsTest < ActiveSupport::TestCase
     assert_empty errors, "response schema validation errors: #{errors.map { |e| e["error"] }.join("; ")}"
   end
 
+ test "call resolves performer, organizer and location to id, uri and name" do
+    captured = {}
+    response = call_search_events_with_stubbed_reconciliation(
+      match_response: MATCH_RESPONSE_WITH_ONE_CANDIDATE,
+      extend_response: EXTEND_RESPONSE,
+      captured: captured,
+      **FULL_PARAMS
+    )
+
+    expanded = captured[:extend_payload][:properties]
+      .select { |property| property[:expand] }
+      .map { |property| property[:id] }
+    assert_equal %w[location performer organizer].sort, expanded.sort,
+                 "performer, organizer and location must be requested with expand: true"
+
+    event = JSON.parse(response.content.first[:text]).fetch("results").first
+
+    assert_equal [{ "id" => "Person1", "uri" => "http://kg.artsdata.ca/resource/Person1",
+                    "name" => "Test Performer" }], event.fetch("performer")
+    assert_equal [{ "id" => "Organization1", "uri" => "http://kg.artsdata.ca/resource/Organization1",
+                    "name" => "Test Organization" }], event.fetch("organizer")
+    assert_equal [{ "id" => "Place1", "uri" => "http://kg.artsdata.ca/resource/Place1",
+                    "name" => "Test Place" }], event.fetch("location")
+  end
+
   test "call's response satisfies the response schema, and never queries extend, when match has no candidates" do
     response = call_search_events_with_stubbed_reconciliation(
       match_response: MATCH_RESPONSE_WITH_NO_CANDIDATES,
@@ -174,12 +209,13 @@ class SearchEventsTest < ActiveSupport::TestCase
   # Stubs execute_reconciliation_query on a real ArtsdataClient instance (and makes
   # ArtsdataClient.new return that instance), so SearchEvents.call exercises its real
   # implementation end to end, with only the network call itself replaced by canned data.
-  def call_search_events_with_stubbed_reconciliation(match_response:, extend_response: nil, **params)
+  def call_search_events_with_stubbed_reconciliation(match_response:, extend_response: nil, captured: {}, **params)
     real_client = ArtsdataClient.new
 
-    respond_to_route = lambda do |_payload, **options|
+    respond_to_route = lambda do |payload, **options|
       next match_response if options[:route] == "match"
 
+      captured[:extend_payload] = payload
       extend_response || flunk("execute_reconciliation_query was called with route: 'extend', but no extend_response was given")
     end
 
