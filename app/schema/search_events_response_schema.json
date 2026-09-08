@@ -117,9 +117,9 @@
           "additional_type": {
             "type": "array",
             "items": {
-              "$ref": "#/$defs/uriList"
+              "$ref": "#/$defs/stringList"
             },
-            "description": "List of additional Type URIs"
+            "description": "List of additional Type URIs or labels"
           },
           "additional_properties": {
             "type": "array",
@@ -158,8 +158,11 @@
       "additionalProperties": false
     },
     "uriList": {
+      "type": "string"
+    },
+    "stringList": {
       "type": "string",
-      "format": "uri"
+      "description": "List of strings"
     },
     "multiLingualString": {
       "type": "object",
