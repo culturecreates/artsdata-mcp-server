@@ -68,7 +68,25 @@ class ArtsdataClient
   def format_get_entity_results(input_data)
     parse_loc_str = ->(vals) { vals.map { |v| { "value" => v["str"] || "" }.tap { |h| h["language"] = v["lang"] if v["lang"] } } }
     extract_val   = ->(vals) { vals.filter_map { |v| v["str"] || v["id"] } }
-    to_uris       = ->(ids) { ids.map { |id| "#{ARTSDATA_BASE_URL}#{id}" } }
+
+    ref_name      = lambda do |value|
+      name_prop = (value["properties"] || []).find { |p| p["id"] == "name" }
+      next nil unless name_prop
+      name_prop.fetch("values", []).filter_map { |v| v["str"] }.find(&:present?)
+    end
+
+    to_entity_refs = lambda do |values|
+      values.filter_map do |value|
+        raw_id = value["id"] || value["str"]
+        next nil if raw_id.blank?
+
+        uri = raw_id.start_with?("http") ? raw_id : "#{ARTSDATA_BASE_URL}#{raw_id}"
+        ref = { "id" => uri.split("/").last, "uri" => uri }
+        name = ref_name.call(value)
+        ref["name"] = name if name
+        ref
+      end
+    end
 
     loc_str_fields = {
       "alternate_names"           => %w[alternateName],
@@ -144,7 +162,7 @@ class ArtsdataClient
 
       entity_ref_fields.each do |key|
         vals = values_for.call([key])
-        result[key] = to_uris.call(extract_val.call(vals)) if vals
+        result[key] = to_entity_refs.call(vals) if vals
       end
 
       extra_props = props.except(*known_keys).map do |prop_id, items|
@@ -174,10 +192,10 @@ class ArtsdataClient
         { "id": "sameAs" },
         { "id": "eventStatus" },
         { "id": "eventAttendanceMode" },
-        { "id": "location" },
+        { "id": "location", "expand": true },
         { "id": "offers" },
-        { "id": "performer" },
-        { "id": "organizer" }
+        { "id": "performer", "expand": true },
+        { "id": "organizer", "expand": true }
       ]
     }
 
