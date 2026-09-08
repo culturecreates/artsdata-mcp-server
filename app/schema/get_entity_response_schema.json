@@ -89,23 +89,30 @@
     "organizer": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/uriList"
+        "$ref": "#/$defs/entityDetails"
       },
-      "description": "List of organizer URIs"
+      "description": "List of organizers, each with its Artsdata id, URI and name."
     },
     "performer": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/uriList"
+        "$ref": "#/$defs/entityDetails"
       },
-      "description": "List of performer URIs"
+      "description": "List of performers, each with its Artsdata id, URI and name."
     },
     "location": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/uriList"
+        "$ref": "#/$defs/entityDetails"
       },
-      "description": "List of location URIs"
+      "description": "List of locations, each with its Artsdata id, URI and name."
+    },
+    "additional_type": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stringList"
+      },
+      "description": "List of additional Type URIs or labels"
     },
     "additional_properties": {
       "type": "array",
@@ -139,9 +146,31 @@
       },
       "additionalProperties": false
     },
-    "uriList": {
-      "type": "string",
-      "format": "uri"
+    "stringList": {
+      "type": "string"
+    },
+    "entityDetails": {
+      "type": "object",
+      "required": [
+        "id",
+        "uri"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Artsdata identifier of the referenced entity."
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI of the referenced entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Preferred label of the referenced entity, in the requested language when available."
+        }
+      },
+      "additionalProperties": false
     },
     "multiLingualString": {
       "type": "object",
