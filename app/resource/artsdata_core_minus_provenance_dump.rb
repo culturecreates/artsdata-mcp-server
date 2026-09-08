@@ -82,7 +82,7 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
 
     def static_fields
       {
-        @context => context,
+        "@context" => context,
         "uri" => RESOURCE_URI,
         "type" => DUMP_TYPE,
         "name" => DUMP_NAME,
