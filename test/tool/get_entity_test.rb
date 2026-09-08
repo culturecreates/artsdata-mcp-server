@@ -38,8 +38,15 @@ class GetEntityTest < ActiveSupport::TestCase
           { "id" => "eventStatus", "values" => [{ "id" => "http://schema.org/EventScheduled" }] },
           { "id" => "eventAttendanceMode",
             "values" => [{ "id" => "http://schema.org/OfflineEventAttendanceMode" }] },
-          { "id" => "location", "values" => [{ "id" => "K11-99" }] },
-          { "id" => "performer", "values" => [{ "id" => "K11-98" }] },
+          { "id" => "location",
+            "values" => [{ "id" => "K11-99",
+                           "properties" => [{ "id" => "name",
+                                              "values" => [{ "str" => "Test Place" },
+                                                           { "str" => "Test Place", "lang" => "en" }] }] }] },
+          { "id" => "performer",
+            "values" => [{ "id" => "K11-98",
+                           "properties" => [{ "id" => "name",
+                                              "values" => [{ "str" => "Test Performer" }] }] }] },
           { "id" => "organizer", "values" => [{ "id" => "K11-97" }] },
           { "id" => "offers", "values" => [{ "id" => "http://example.com/tickets" }] }
         ]
@@ -110,6 +117,29 @@ class GetEntityTest < ActiveSupport::TestCase
     errors = JSONSchemer.schema(RESPONSE_SCHEMA_PATH).validate(wire_response).to_a
     assert_empty errors,
                  "response schema validation errors: #{errors.map { |e| e['error'] }.join('; ')}"
+  end
+
+ test "call resolves performer and location to id, uri and name, and tolerates a missing name" do
+    captured = {}
+    response = call_get_entity_with_stubbed_reconciliation(
+      extend_response: EXTEND_RESPONSE, captured: captured
+    )
+
+    expanded = captured[:payload][:properties]
+      .select { |property| property[:expand] }
+      .map { |property| property[:id] }
+    assert_equal %w[location performer organizer].sort, expanded.sort,
+                 "performer, organizer and location must be requested with expand: true"
+
+    wire_response = JSON.parse(response.content.first[:text])
+
+    assert_equal [{ "id" => "K11-98", "uri" => "http://kg.artsdata.ca/resource/K11-98",
+                    "name" => "Test Performer" }], wire_response.fetch("performer")
+    assert_equal [{ "id" => "K11-99", "uri" => "http://kg.artsdata.ca/resource/K11-99",
+                    "name" => "Test Place" }], wire_response.fetch("location")
+    assert_equal [{ "id" => "K11-97", "uri" => "http://kg.artsdata.ca/resource/K11-97" }],
+                 wire_response.fetch("organizer"),
+                 "a reference without a nested name should still carry its id and uri"
   end
 
 
