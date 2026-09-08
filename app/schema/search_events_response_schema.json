@@ -158,11 +158,11 @@
       "additionalProperties": false
     },
     "uriList": {
-      "type": "string"
+      "type": "string",
+      "format": "uri"
     },
     "stringList": {
-      "type": "string",
-      "description": "List of strings"
+      "type": "string"
     },
     "multiLingualString": {
       "type": "object",
