@@ -32,7 +32,6 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
         "schema": "https://schema.org/",
         "dcat": "http://www.w3.org/ns/dcat#",
-        "dataid": "http://dataid.dbpedia.org/ns/core#",
         "dct": "http://purl.org/dc/terms/",
 
         "id": "@id",
