@@ -3,7 +3,7 @@ require "json"
 
 class ArtsdataCoreMinusProvenanceDump < MCP::Resource
   RESOURCE_URI = "artsdata://dumps/core-minus-provenance/latest".freeze
-  MANIFEST_MIME_TYPE = "application/json".freeze
+  MANIFEST_MIME_TYPE = "application/ld+json".freeze
 
   ARTIFACT = "core-minus-provenance".freeze
   ARTIFACT_URI = "http://kg.artsdata.ca/databus/culture-creates/artsdata-dump/#{ARTIFACT}".freeze
@@ -70,7 +70,7 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
       {
         "@context": context,
         "type": "dcat:Distribution",
-        "name": "Artsdata core minus provenance",
+        "name": DUMP_NAME,
         "mediaType": "text/turtle"
       }
     end
