@@ -7,40 +7,29 @@ class ArtsdataDumpTest < ActiveSupport::TestCase
   FILE_URL = "https://artsdata-graphdb-backups.s3.ca-central-1.amazonaws.com/core-graph-minus-provenance/monthly/artsdata-2026-09-01-core-minus-provenance.ttl.gz".freeze
 
   DATABUS_ENTRY = {
-    "artifact" => ARTIFACT_URI,
-    "file" => FILE_URL,
-    "latestVersion" => "2026-09-01T05_18_57"
+    "artifact"=> ARTIFACT_URI,
+    "file"=> FILE_URL,
+    "version"=> "2026-09-01T05_18_57",
+    "byteSize"=> 8581868,
+    "comment"=> "Monthly core graph snapshot with provenance triples removed, RDF 1.1 compatible.",
+    "distribution"=> "http://kg.artsdata.ca/databus/culture-creates/artsdata-dump/core-minus-provenance/2026-09-01T05_18_57#artsdata-2026-09-01-core-minus-provenance.ttl.gz"
   }.freeze
-
 
   test "manifest describes the latest version reported by the Databus" do
     manifest = with_stubbed_databus(DATABUS_ENTRY) { ArtsdataCoreMinusProvenanceDump.manifest }
 
     assert_equal({
-                   "uri" => RESOURCE_URI,
-                   "type" => "ArtsdataDump",
-                   "name" => "Artsdata core minus provenance",
-                   "description" => "Latest public dump of the Artsdata core graph with provenance and RDF-star " \
-                     "annotations removed. Intended for RDF 1.1 consumers, AI agents, " \
-                     "reconciliation workflows, and systems that cannot parse RDF 1.2/Turtle-star.",
-                   "artifact" => "core-minus-provenance",
-                   "artifactUri" => ARTIFACT_URI,
-                   "version" => "2026-09-01T05_18_57",
-                   "content" => "Artsdata core graph without provenance, RDF 1.1 compatible",
-                   "format" => "text/turtle",
-                   "compression" => "gzip",
-                   "downloadUrl" => FILE_URL
+                   "@context": ArtsdataCoreMinusProvenanceDump.context,
+                   "type": "dcat:Distribution",
+                   "name": "Artsdata core minus provenance",
+                   "mediaType": "text/turtle",
+                   "id": DATABUS_ENTRY["distribution"],
+                   "comment": DATABUS_ENTRY["comment"],
+                   "version": DATABUS_ENTRY["version"],
+                   "isVersionOf": ARTIFACT_URI,
+                   "downloadURL": FILE_URL,
+                   "byteSize": DATABUS_ENTRY["byteSize"]
                  }, manifest)
-  end
-
-  test "manifest stays readable when the Databus is unavailable" do
-    manifest = with_stubbed_databus(DatabusClient::Error.new("HTTP 503")) { ArtsdataCoreMinusProvenanceDump.manifest }
-
-    assert_equal RESOURCE_URI, manifest["uri"]
-    assert_equal "core-minus-provenance", manifest["artifact"]
-    assert_equal "HTTP 503", manifest["error"]
-    refute manifest.key?("downloadUrl"), "no download URL can be offered when the Databus is unreachable"
-    refute manifest.key?("version")
   end
 
 

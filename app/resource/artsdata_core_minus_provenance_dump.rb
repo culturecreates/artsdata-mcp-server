@@ -3,20 +3,12 @@ require "json"
 
 class ArtsdataCoreMinusProvenanceDump < MCP::Resource
   RESOURCE_URI = "artsdata://dumps/core-minus-provenance/latest".freeze
-  MANIFEST_MIME_TYPE = "application/json".freeze
+  MANIFEST_MIME_TYPE = "application/ld+json".freeze
 
   ARTIFACT = "core-minus-provenance".freeze
   ARTIFACT_URI = "http://kg.artsdata.ca/databus/culture-creates/artsdata-dump/#{ARTIFACT}".freeze
 
-  DUMP_TYPE = "ArtsdataDump".freeze
   DUMP_NAME = "Artsdata core minus provenance".freeze
-  DUMP_DESCRIPTION = "Latest public dump of the Artsdata core graph with provenance and RDF-star " \
-    "annotations removed. Intended for RDF 1.1 consumers, AI agents, " \
-    "reconciliation workflows, and systems that cannot parse RDF 1.2/Turtle-star.".freeze
-  DUMP_CONTENT = "Artsdata core graph without provenance, RDF 1.1 compatible".freeze
-
-  DUMP_FORMAT = "text/turtle".freeze
-  DUMP_COMPRESSION = "gzip".freeze
 
   uri RESOURCE_URI
   resource_name "artsdata_dump"
@@ -35,16 +27,36 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
       )
     end
 
+    def context
+      {
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "schema": "https://schema.org/",
+        "dcat": "http://www.w3.org/ns/dcat#",
+        "dct": "http://purl.org/dc/terms/",
+
+        "id": "@id",
+        "name": "schema:name",
+        "type": "@type",
+        "byteSize": "dcat:byteSize",
+        "downloadURL": "dcat:downloadURL",
+        "comment": "rdfs:comment",
+        "version": "schema:version",
+        "isVersionOf": "dct:isVersionOf",
+        "mediaType": "dcat:format"
+      }
+    end
+
     def manifest
       entry = DatabusClient.new.latest_artifact(ARTIFACT_URI)
 
       static_fields
         .merge(
-          "version" => entry["latestVersion"],
-          "content" => DUMP_CONTENT,
-          "format" => DUMP_FORMAT,
-          "compression" => DUMP_COMPRESSION,
-          "downloadUrl" => entry["file"]
+          "id": entry["distribution"],
+          "comment": entry["comment"],
+          "version": entry["version"],
+          "isVersionOf": entry["artifact"],
+          "downloadURL": entry["file"],
+          "byteSize": entry["byteSize"]
         )
         .compact
     rescue DatabusClient::Error => e
@@ -56,13 +68,12 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
 
     def static_fields
       {
-        "uri" => RESOURCE_URI,
-        "type" => DUMP_TYPE,
-        "name" => DUMP_NAME,
-        "description" => DUMP_DESCRIPTION,
-        "artifact" => ARTIFACT,
-        "artifactUri" => ARTIFACT_URI
+        "@context": context,
+        "type": "dcat:Distribution",
+        "name": DUMP_NAME,
+        "mediaType": "text/turtle"
       }
     end
+
   end
 end
