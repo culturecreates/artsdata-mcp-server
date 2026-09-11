@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SparqlQueryRequest",
+  "description": "Request schema for the sparql_query tool.",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A complete SPARQL 1.1 SELECT or ASK query, with a PREFIX declaration for every prefix it uses. Build it from the classes, properties and prefixes returned by get_schema, and add a LIMIT."
+    }
+  },
+  "required": [
+    "query"
+  ],
+  "additionalProperties": false
+}
