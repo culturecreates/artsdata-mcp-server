@@ -56,6 +56,10 @@ test/
 
 - `ARTSDATA_RECONCILIATION_ENDPOINT`: configurable reconciliation
   endpoint URL for `/search-entities`.
+- `ARTSDATA_SCHEMA_URL` (optional): Turtle file compiled by the `get_schema` tool
+  (default `https://docs.artsdata.ca/artsdata-schema.ttl`).
+- `ARTSDATA_SCHEMA_CACHE_TTL_SECONDS` (optional): how long the compiled schema is cached
+  in process (default `86400`).
 - `ARTSDATA_CORS_ORIGINS` (optional): comma-separated CORS origins (default `*`).
 - `ARTSDATA_API_ENDPOINT` (optional): base URL of the Artsdata API, used to query the
   Databus for the latest data dump (default `https://api.artsdata.ca`).

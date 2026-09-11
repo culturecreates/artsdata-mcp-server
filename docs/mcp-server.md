@@ -247,6 +247,58 @@ Each matching event is returned in the same detailed shape as `get_entity`
 }
 ```
 
+### `get_schema`
+
+Returns the Artsdata data model so an agent can write SPARQL against
+`https://query.artsdata.ca/query` without prior knowledge of Artsdata's
+ontology. It is compiled from
+[`artsdata-schema.ttl`](https://docs.artsdata.ca/artsdata-schema.ttl) (the
+Artsdata Ontology plus the CORE graph SHACL shapes) into a class-centric
+digest. All shapes that apply to a class (core, ontology-extension,
+equivalent-class, superclass and value shapes) are merged into one property
+list. IRIs are written as CURIEs over the returned `prefixes`, and paths as
+SPARQL property paths. Validation-only details (`sh:message`, `sh:sparql`)
+are dropped.
+
+The file is fetched at runtime and cached in process (24h by default). If it
+can't be fetched or parsed, the last good digest is kept, and failing that the
+bundled snapshot in `app/schema/artsdata-schema.ttl` is used.
+
+**Input:** none (`{}`).
+
+**Output (abridged)**
+
+```json
+{
+  "about": { "title": "Artsdata Ontology", "version": "1.4.0", "source": "https://docs.artsdata.ca/artsdata-schema.ttl", "loaded_from": "remote", "sparql_endpoint": "https://query.artsdata.ca/query" },
+  "conventions": ["Use the `prefixes` verbatim in SPARQL. schema: is http://schema.org/ (http, not https).", "..."],
+  "prefixes": { "ado": "http://kg.artsdata.ca/ontology/", "adr": "http://kg.artsdata.ca/resource/", "schema": "http://schema.org/", "...": "..." },
+  "classes": [
+    {
+      "class": "schema:Event",
+      "label": "Event",
+      "equivalent_classes": ["ado:Event"],
+      "shapes": ["ads:AdoEventShape", "ads:CoreEventShape"],
+      "properties": [
+        { "path": "schema:location", "label": "location", "required": true, "node_kind": "IRI", "classes": ["schema:Place"], "pattern": "^http://kg\\.artsdata\\.ca/resource/" },
+        { "path": "schema:name", "label": "name", "required": true, "datatypes": ["rdf:langString", "xsd:string"], "unique_lang": true },
+        { "path": "schema:eventStatus", "label": "event status", "required": false, "max_count": 1, "in": ["schema:EventPostponed", "schema:EventScheduled", "..."] },
+        {
+          "path": "ado:hasEventTypeConcept", "label": "has event type", "required": false, "node_kind": "IRI", "classes": ["skos:Concept"],
+          "sub_property_of": ["schema:additionalType"],
+          "value_shape": { "label": "Artsdata Event Type Concept", "properties": [ { "path": "skos:inScheme", "required": false, "has_value": ["adr:ArtsdataEventTypes"] } ] }
+        }
+      ]
+    }
+  ],
+  "vocabularies": [
+    { "property": "ado:hasEventTypeConcept", "scheme": "adr:ArtsdataEventTypes", "label": "Artsdata Event Type Concept", "classes": ["skos:Concept"] }
+  ]
+}
+```
+
+Refresh the bundled snapshot with `bin/rails artsdata:schema:refresh_snapshot`.
+
 ## REST-style equivalent
 
 A legacy REST/JSON endpoint mirroring `search_entities` is also available on
