@@ -297,6 +297,64 @@ been loaded yet, the tool call fails.
 }
 ```
 
+### `sparql_query`
+
+Runs a read-only SPARQL 1.1 query against `https://query.artsdata.ca/query`
+and returns the endpoint's
+[SPARQL 1.1 Query Results JSON](https://www.w3.org/TR/sparql11-results-json/)
+as is. It is a thin pass-through: the agent writes the query from what
+`get_schema` returns, and the server neither builds nor rewrites it.
+
+The intended flow is `get_schema` (learn the model) → `sparql_query` (run the
+query) → `get_entity` / `search_entities` for details about the entities in
+the results.
+
+Guard rails:
+
+- Only `SELECT` and `ASK` are accepted (the forms whose result is SPARQL
+  Results JSON). Updates, `CONSTRUCT` and `DESCRIBE` are refused before
+  anything is sent to the endpoint.
+- At most 1000 rows are returned. When the endpoint returns more, the rest is
+  cut and `truncated: true` is added; agents should use `LIMIT` / `OFFSET`.
+- When the endpoint rejects a query (HTTP 400, e.g. a syntax error), the tool
+  returns `isError: true` with the endpoint's message so the agent can fix the
+  query and retry. Timeouts and endpoint failures are returned the same way.
+
+**Input**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `query` | string | Yes | A complete SPARQL `SELECT` or `ASK` query, with a `PREFIX` for every prefix it uses. |
+
+**Example call**
+
+```json
+{
+  "name": "sparql_query",
+  "arguments": {
+    "query": "PREFIX schema: <http://schema.org/>\nSELECT ?event ?name WHERE { ?event a schema:Event ; schema:name ?name . FILTER(LANG(?name) = \"en\") } LIMIT 2"
+  }
+}
+```
+
+**Example response**
+
+```json
+{
+  "head": { "vars": ["event", "name"] },
+  "results": {
+    "bindings": [
+      {
+        "event": { "type": "uri", "value": "http://kg.artsdata.ca/resource/K11-1" },
+        "name": { "type": "literal", "value": "Concert", "xml:lang": "en" }
+      }
+    ]
+  }
+}
+```
+
+An `ASK` query returns `{ "head": {}, "boolean": true }`.
+
 ## REST-style equivalent
 
 A legacy REST/JSON endpoint mirroring `search_entities` is also available on
