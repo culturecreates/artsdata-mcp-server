@@ -28,7 +28,11 @@ class ArtsdataSchema
       "(an adr: URI), not to text. To filter or display it by name, join to that entity's schema:name.",
     "Text such as schema:name is usually language-tagged (rdf:langString), at most one value per language. " \
       "A plain string never equals a tagged one: compare with STR(?x), e.g. " \
-      "FILTER(CONTAINS(LCASE(STR(?name)), \"jazz\")), and pick a language with FILTER(LANG(?name) = \"en\").",
+      "FILTER(CONTAINS(LCASE(STR(?name)), \"jazz\")), and pick a language with FILTER(LANG(?name) = \"en\"). " \
+      "This STR() rule is only for text - it does not apply to typed literals such as dates or numbers.",
+    "A property whose `datatypes` includes xsd:date or xsd:dateTime (e.g. schema:startDate, " \
+      "schema:endDate) is a typed literal, not text: compare or filter it directly against a typed " \
+      "literal, e.g. FILTER(?startDate >= \"2026-01-01T00:00:00\"^^xsd:dateTime), never with STR().",
     "`in` lists the only allowed values. `value_shape` describes the node a property points to " \
       "(e.g. an image or a postal address).",
     "Properties listed under `vocabularies` point to skos:Concept URIs in an Artsdata controlled vocabulary; " \
