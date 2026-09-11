@@ -9,6 +9,7 @@ Rails.application.config.to_prepare do
       SearchEntities, # search for entities
       GetEntity, # get entity details by uri
       SearchEvents, # search for events by place, artist, organization, type and language
+      GetSchema, # data model to get Artsdata schema (ontology + SHACL)
     ],
     resources: [
       ArtsdataCoreMinusProvenanceDump

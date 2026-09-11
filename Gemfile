@@ -28,6 +28,10 @@ gem "ostruct"
 
 gem "mcp"
 
+# Parse the Artsdata ontology + SHACL shapes (Turtle) for the get_schema tool
+gem "rdf", "~> 3.3"
+gem "rdf-turtle", "~> 3.3"
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
