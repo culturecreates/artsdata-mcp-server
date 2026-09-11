@@ -25,7 +25,9 @@ class ArtsdataSchema
       "`required: true` means every entity of that class is expected to have the property; wrap all other " \
       "properties in OPTIONAL { }.",
     "A property whose `pattern` is ^http://kg\\.artsdata\\.ca/resource/ links to another Artsdata entity " \
-      "(an adr: URI), not to text. To filter or display it by name, join to that entity's schema:name.",
+      "(an adr: URI), not to text. To filter or display it by name, join to that entity's schema:name - " \
+      "unless it is a skos:Concept (see `vocabularies`), which uses skos:prefLabel instead; concepts do " \
+      "not have schema:name.",
     "Text such as schema:name is usually language-tagged (rdf:langString), at most one value per language. " \
       "A plain string never equals a tagged one: compare with STR(?x), e.g. " \
       "FILTER(CONTAINS(LCASE(STR(?name)), \"jazz\")), and pick a language with FILTER(LANG(?name) = \"en\"). " \
