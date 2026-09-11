@@ -102,6 +102,6 @@ class SparqlQueryTest < ActiveSupport::TestCase
     result = JSON.parse(body).fetch("result")
 
     assert result["isError"]
-    assert_match(/Only SELECT and ASK queries are supported/, result.dig("content", 0, "text"))
+    assert_match(/Only SELECT and ASK queries are supported. Rewrite the query as a SELECT; use get_entity to get an entity's details./, result.dig("content", 0, "text"))
   end
 end

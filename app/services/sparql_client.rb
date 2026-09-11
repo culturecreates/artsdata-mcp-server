@@ -93,7 +93,7 @@ class SparqlClient
       http.request(request)
     end
 
-    return response.body.to_s.force_encoding(Encoding::UTF_8) if response.is_a?(Net::HTTPSuccess)
+    return utf8(response.body) if response.is_a?(Net::HTTPSuccess)
 
     message = endpoint_message(response)
     if response.is_a?(Net::HTTPBadRequest)
