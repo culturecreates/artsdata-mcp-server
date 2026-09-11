@@ -32,6 +32,40 @@ class ArtsdataDumpTest < ActiveSupport::TestCase
                  }, manifest)
   end
 
+  test "every manifest property other than @context has a term defined in @context" do
+    manifest = with_stubbed_databus(DATABUS_ENTRY) { ArtsdataCoreMinusProvenanceDump.manifest }
+    context = ArtsdataCoreMinusProvenanceDump.context
+
+    properties = manifest.keys.map(&:to_sym) - [:"@context"]
+
+    properties.each do |property|
+      assert context.key?(property), "#{property.inspect} is used in the manifest but has no term in @context"
+    end
+  end
+
+  test "@context is syntactically valid JSON-LD: every term is a keyword or a CURIE backed by a declared prefix" do
+    context = ArtsdataCoreMinusProvenanceDump.context
+
+    # A namespace prefix is a term whose value is itself an absolute IRI ending in "/" or "#", so a
+    # CURIE like "dcat:mediaType" can be built by appending the local name to it.
+    prefixes, terms = context.partition { |_, value| value.to_s.match?(%r{\Ahttps?://\S*[/#]\z}) }.map(&:to_h)
+    refute_empty prefixes, "expected at least one namespace prefix (e.g. dcat:) in @context"
+
+    prefixes.each_value do |iri|
+      assert URI.parse(iri).absolute?, "#{iri.inspect} is not a valid absolute IRI"
+    end
+
+    terms.each do |term, value|
+      next if %w[@id @type].include?(value)
+
+      assert_match(/\A[^\s:]+:[^\s:]+\z/, value.to_s,
+                    "#{term.inspect} => #{value.inspect} is not a JSON-LD keyword, CURIE, or absolute IRI")
+      next if value.to_s.match?(%r{\Ahttps?://})
+
+      prefix = value.to_s[/\A([^:]+):/, 1].to_sym
+      assert prefixes.key?(prefix), "#{term.inspect} => #{value.inspect} uses undeclared prefix #{prefix.inspect}"
+    end
+  end
 
   private
 

@@ -42,7 +42,7 @@ class ArtsdataCoreMinusProvenanceDump < MCP::Resource
         "comment": "rdfs:comment",
         "version": "schema:version",
         "isVersionOf": "dct:isVersionOf",
-        "mediaType": "dcat:format"
+        "mediaType": "dcat:mediaType"
       }
     end
 
