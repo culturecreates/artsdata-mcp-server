@@ -4,6 +4,7 @@ Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
   ENV['ARTSDATA_RECONCILIATION_ENDPOINT'] ||= 'https://staging-recon.artsdata.ca/'
   ENV['ARTSDATA_API_ENDPOINT'] ||= 'https://api.artsdata.ca'
+  ENV['ARTSDATA_SPARQL_ENDPOINT'] ||= 'https://query.artsdata.ca/query'
 
   # In the development environment your application's code is reloaded any time
   # it changes. This slows down response time but is perfect for development

@@ -7,8 +7,8 @@ class GetSchema < MCP::Tool
               "Organization, Person, LivePerformanceWork...), the properties of each with required/optional, " \
               "cardinality, value types, linked classes and allowed values, the controlled vocabularies, the " \
               "SPARQL prefixes, and conventions for querying. Derived from the Artsdata Ontology and the " \
-              "Artsdata CORE graph SHACL shapes. Call this before writing a SPARQL query against " \
-              "https://query.artsdata.ca/query, since Artsdata's model is not general knowledge. Takes no input."
+              "Artsdata CORE graph SHACL shapes. Call this before writing a SPARQL query to run with sparql_query " \
+              "against https://query.artsdata.ca/query, since Artsdata's model is not general knowledge. Takes no input."
 
   request_schema_path = File.expand_path("../schema/get_schema_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)

@@ -63,6 +63,12 @@ test/
 - `ARTSDATA_CORS_ORIGINS` (optional): comma-separated CORS origins (default `*`).
 - `ARTSDATA_API_ENDPOINT` (optional): base URL of the Artsdata API, used to query the
   Databus for the latest data dump (default `https://api.artsdata.ca`).
+- `ARTSDATA_SPARQL_ENDPOINT` (optional): SPARQL endpoint queried by the `sparql_query`
+  tool (default `https://query.artsdata.ca/query`).
+- `ARTSDATA_SPARQL_TIMEOUT_SECONDS` (optional): read timeout for a `sparql_query` call
+  (default `25`).
+- `ARTSDATA_SPARQL_MAX_ROWS` (optional): maximum rows `sparql_query` returns; extra rows
+  are cut and the result is flagged `truncated` (default `1000`).
 - SPARQL query template for `/entities` is currently a placeholder in
   `app/services/artsdata_client.rb`.
 - Docker instance profiles are provided in:

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SparqlQueryResponse",
+  "description": "Response schema for the sparql_query tool: the endpoint's SPARQL 1.1 Query Results JSON (https://www.w3.org/TR/sparql11-results-json/), as returned. A SELECT gives head.vars and results.bindings; an ASK gives boolean.",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "head": {
+      "type": "object",
+      "properties": {
+        "vars": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The projected variable names, without the leading '?'."
+        },
+        "link": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "results": {
+      "type": "object",
+      "properties": {
+        "bindings": {
+          "type": "array",
+          "description": "One object per solution, keyed by variable name. Unbound variables (e.g. from OPTIONAL) are absent.",
+          "items": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/$defs/rdfTerm" }
+          }
+        }
+      },
+      "required": ["bindings"]
+    },
+    "boolean": {
+      "type": "boolean",
+      "description": "The answer to an ASK query."
+    },
+    "truncated": {
+      "type": "boolean",
+      "description": "Present and true when the endpoint returned more rows than the server's row cap and only the first rows are included. Add or lower the LIMIT, or page with OFFSET."
+    }
+  },
+  "required": ["head"],
+  "$defs": {
+    "rdfTerm": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["uri", "literal", "bnode", "triple"],
+          "description": "'triple' is an RDF-star quoted triple, whose value is an object with subject, predicate and object terms."
+        },
+        "value": {
+          "anyOf": [
+            { "type": "string" },
+            { "type": "object" }
+          ]
+        },
+        "xml:lang": {
+          "type": "string",
+          "description": "Language tag of a language-tagged literal."
+        },
+        "datatype": {
+          "type": "string",
+          "description": "Datatype IRI of a typed literal."
+        }
+      },
+      "required": ["type", "value"]
+    }
+  }
+}
