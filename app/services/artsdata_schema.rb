@@ -5,13 +5,11 @@ require "uri"
 #
 # The source of truth is https://docs.artsdata.ca/artsdata-schema.ttl, generated in
 # culturecreates/artsdata-data-model. It is fetched at runtime so the digest follows the ontology,
-# compiled once, and cached in-process for CACHE_TTL_SECONDS. If the live file cannot be fetched
-# or parsed, the last good digest is kept, or else the bundled snapshot at SNAPSHOT_PATH is used
-# (refresh it with `bin/rails artsdata:schema:refresh_snapshot`).
+# compiled once, and cached in-process for CACHE_TTL_SECONDS. If a refresh cannot fetch or parse
+# the file, the last good digest is kept; if there is none yet, the error is raised.
 class ArtsdataSchema
   SOURCE_URL_ENV = "ARTSDATA_SCHEMA_URL".freeze
   DEFAULT_SOURCE_URL = "https://docs.artsdata.ca/artsdata-schema.ttl".freeze
-  SNAPSHOT_PATH = File.expand_path("../schema/artsdata-schema.ttl", __dir__).freeze
   SPARQL_ENDPOINT = "https://query.artsdata.ca/query".freeze
 
   CACHE_TTL_ENV = "ARTSDATA_SCHEMA_CACHE_TTL_SECONDS".freeze
@@ -70,34 +68,30 @@ class ArtsdataSchema
     end
   end
 
-  attr_reader :source_url, :snapshot_path
+  attr_reader :source_url
 
   def initialize(source_url: ENV.fetch(SOURCE_URL_ENV, DEFAULT_SOURCE_URL),
-                 snapshot_path: SNAPSHOT_PATH,
                  timeout: DEFAULT_TIMEOUT_SECONDS)
     @source_url = source_url
-    @snapshot_path = snapshot_path
     @timeout = timeout
   end
 
-  # Live file first; then the previous digest, if any; then the bundled snapshot.
+  # Fetches and compiles the live file. On failure, returns the previous digest if there is one,
+  # otherwise raises.
   def load(previous: nil)
-    compile(fetch_remote, loaded_from: "remote")
+    compile(fetch_remote)
   rescue StandardError => e
+    raise unless previous
+
     Rails.logger.warn("ArtsdataSchema: could not load #{source_url} (#{e.class}: #{e.message}); " \
-                      "using #{previous ? 'previously loaded schema' : 'bundled snapshot'}")
-    previous || load_snapshot
+                      "keeping the previously loaded schema")
+    previous
   end
 
-  def load_snapshot
-    compile(File.read(snapshot_path, encoding: "UTF-8"), loaded_from: "snapshot")
-  end
-
-  def compile(turtle, loaded_from:)
+  def compile(turtle)
     digest = ShaclSchemaCompiler.compile_turtle(turtle)
     about = digest.fetch("about", {}).merge(
       "source" => source_url,
-      "loaded_from" => loaded_from,
       "sparql_endpoint" => SPARQL_ENDPOINT
     )
     { "about" => about, "conventions" => CONVENTIONS }.merge(digest.except("about"))

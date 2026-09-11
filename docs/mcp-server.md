@@ -260,9 +260,9 @@ list. IRIs are written as CURIEs over the returned `prefixes`, and paths as
 SPARQL property paths. Validation-only details (`sh:message`, `sh:sparql`)
 are dropped.
 
-The file is fetched at runtime and cached in process (24h by default). If it
-can't be fetched or parsed, the last good digest is kept, and failing that the
-bundled snapshot in `app/schema/artsdata-schema.ttl` is used.
+The file is fetched at runtime and cached in process (24h by default). If a
+refresh can't fetch or parse it, the last good digest is kept; if nothing has
+been loaded yet, the tool call fails.
 
 **Input:** none (`{}`).
 
@@ -270,7 +270,7 @@ bundled snapshot in `app/schema/artsdata-schema.ttl` is used.
 
 ```json
 {
-  "about": { "title": "Artsdata Ontology", "version": "1.4.0", "source": "https://docs.artsdata.ca/artsdata-schema.ttl", "loaded_from": "remote", "sparql_endpoint": "https://query.artsdata.ca/query" },
+  "about": { "title": "Artsdata Ontology", "version": "1.4.0", "source": "https://docs.artsdata.ca/artsdata-schema.ttl", "sparql_endpoint": "https://query.artsdata.ca/query" },
   "conventions": ["Use the `prefixes` verbatim in SPARQL. schema: is http://schema.org/ (http, not https).", "..."],
   "prefixes": { "ado": "http://kg.artsdata.ca/ontology/", "adr": "http://kg.artsdata.ca/resource/", "schema": "http://schema.org/", "...": "..." },
   "classes": [
@@ -296,8 +296,6 @@ bundled snapshot in `app/schema/artsdata-schema.ttl` is used.
   ]
 }
 ```
-
-Refresh the bundled snapshot with `bin/rails artsdata:schema:refresh_snapshot`.
 
 ## REST-style equivalent
 

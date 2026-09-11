@@ -8,7 +8,7 @@
   "properties": {
     "about": {
       "type": "object",
-      "required": ["source", "loaded_from", "sparql_endpoint"],
+      "required": ["source", "sparql_endpoint"],
       "properties": {
         "namespace": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
@@ -16,7 +16,6 @@
         "version": { "type": "string" },
         "modified": { "type": "string" },
         "source": { "type": "string", "format": "uri", "description": "Turtle file the digest was compiled from." },
-        "loaded_from": { "type": "string", "enum": ["remote", "snapshot"] },
         "sparql_endpoint": { "type": "string", "format": "uri" }
       },
       "additionalProperties": false
