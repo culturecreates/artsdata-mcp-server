@@ -72,7 +72,7 @@ class SparqlClient
   def query(query)
     form = self.class.query_form(query)
     unless RESULT_FORMS.include?(form)
-      raise QueryError, "Only SELECT queries are supported" \
+      raise QueryError, "Only SELECT and ASK queries are supported" \
                         "#{form ? " (got #{form.to_s.upcase})" : ""}. " \
                         "Rewrite the query as a SELECT; use get_entity to get an entity's details."
     end
@@ -132,7 +132,13 @@ class SparqlClient
     )
   end
 
+  # A UTF-8 copy of the body. Copied rather than re-tagged in place, since the body can be a frozen
+  # (or soon-to-be-frozen literal) string.
+  def utf8(body)
+    String.new(body.to_s, encoding: Encoding::UTF_8)
+  end
+
   def endpoint_message(response)
-    response.body.to_s.force_encoding(Encoding::UTF_8).scrub.strip.truncate(MAX_ERROR_MESSAGE_LENGTH)
+    utf8(response.body).scrub.strip.truncate(MAX_ERROR_MESSAGE_LENGTH)
   end
 end
