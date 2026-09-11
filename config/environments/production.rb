@@ -5,6 +5,7 @@ Rails.application.configure do
 
   ENV['ARTSDATA_RECONCILIATION_ENDPOINT'] ||= 'https://recon.artsdata.ca/'
   ENV['ARTSDATA_API_ENDPOINT'] ||= 'https://api.artsdata.ca'
+  ENV['ARTSDATA_SPARQL_ENDPOINT'] ||= 'https://query.artsdata.ca/query'
 
   # Code is not reloaded between requests.
   config.enable_reloading = false
