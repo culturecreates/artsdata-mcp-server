@@ -1,0 +1,89 @@
+# Artsdata MCP Server
+
+> Machine-readable guide for LLM and agent tooling.
+
+## Programmatic / agent access
+
+- MCP server endpoint: https://mcp.artsdata.ca/mcp
+- Transport: Streamable HTTP (JSON-RPC 2.0 over POST)
+- Session model: stateless
+- Server instructions: Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query. To answer a question with SPARQL, call get_schema to learn the data model, write the query and run it with sparql_query, then use get_entity (details of a URI) or search_entities (URI from a name) as needed.
+
+## MCP tools
+
+### search_entities
+
+Tool to search for entities in the Artsdata knowledge graph by name and type(optional).
+
+Input parameters
+- query (string, required): Non-empty mandatory search query.
+- types (array, optional): Optional list of type filters; can be empty.
+- language (string, optional, default en, enum en|fr): Language code, restricted to 'en' or 'fr'.
+- limit (integer, optional, default 25, min 1, max 50): Number of results to return.
+
+Output
+- SearchEntitiesResponse - Response schema for the search_entities tool.
+
+### get_entity
+
+Tool to get entities details from Artsdata Knowledge Graph by entity URI.
+
+Input parameters
+- uri (string, required): The Artsdata entity URI.
+
+Output
+- GetEntityResponse - Response schema for the get_entity tool.
+
+### search_events
+
+Tool to search for events in the Artsdata knowledge graph by place, artist, organization, type and language.
+
+Input parameters
+- startDateFrom (string, optional): Optional lower bound filter. Includes events starting on or after this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ).
+- startDateTo (string, optional): Optional upper bound filter. Includes events starting on or before this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ).
+- places (array, optional): Optional list of place label; can be empty.
+- artists (array, optional): Optional list of artists. Each entry is either an artist label (e.g. "Jane Doe") or an Artsdata URI (e.g. "http://kg.artsdata.ca/resource/K1-1"); labels and URIs can be mixed. Can be empty.
+- organizations (array, optional): Optional list of organization label; can be empty.
+- types (array, optional): Optional list of event type label; can be empty.
+- language (string, optional, default en): Language label; default is 'en'.
+- limit (integer, optional, default 25, min 1, max 50): Number of results to return.
+
+Output
+- SearchEventsResponse - Response schema for the search_events tool.
+
+### get_schema
+
+Returns the data model of the Artsdata Knowledge Graph: its entity classes (Event, Place, Organization, Person, LivePerformanceWork...), the properties of each with required/optional, cardinality, value types, linked classes and allowed values, the controlled vocabularies, the SPARQL prefixes, and conventions for querying. Derived from the Artsdata Ontology and the Artsdata CORE graph SHACL shapes. Call this before writing a SPARQL query to run with sparql_query against https://query.artsdata.ca/query, since Artsdata's model is not general knowledge. Takes no input.
+
+Input parameters
+- None
+
+Output
+- GetSchemaResponse - Response schema for the get_schema tool: the Artsdata data model (ontology + CORE graph SHACL shapes) compiled into a class-centric digest. IRIs are CURIEs over `prefixes` (or <full-IRI> when no prefix fits); property paths are SPARQL 1.1 property paths.
+
+### sparql_query
+
+Runs a read-only SPARQL 1.1 SELECT or ASK query against the Artsdata Knowledge Graph (https://query.artsdata.ca/query) and returns the result as SPARQL 1.1 Query Results JSON, exactly as the endpoint returns it: head.vars and results.bindings for SELECT, boolean for ASK. Call get_schema first and build the query from the classes, properties, prefixes and conventions it returns, since Artsdata's model is not general knowledge. Declare every PREFIX you use and always add a LIMIT: at most 1000 rows are returned (the rest is cut and truncated is true; page with OFFSET), and a query gets 25 seconds. If the endpoint rejects the query, its error message is returned so you can fix the query and retry. For the details of an entity URI in the results use get_entity; to find an entity's URI from its name use search_entities.
+
+Input parameters
+- query (string, required): A complete SPARQL 1.1 SELECT or ASK query, with a PREFIX declaration for every prefix it uses. Build it from the classes, properties and prefixes returned by get_schema, and add a LIMIT.
+
+Output
+- SparqlQueryResponse - Response schema for the sparql_query tool: the endpoint's SPARQL 1.1 Query Results JSON (https://www.w3.org/TR/sparql11-results-json/), as returned. A SELECT gives head.vars and results.bindings; an ASK gives boolean.
+
+
+## MCP resources
+
+### artsdata_dump
+
+- Title: Artsdata core minus provenance
+- URI: artsdata://dumps/core-minus-provenance/latest
+- MIME type: application/ld+json
+- Description: Manifest for the latest Artsdata core-minus-provenance dump (gzipped Turtle). Reading this resource returns JSON metadata (download URL, version, format) - not the dump itself. Download the file from `downloadUrl` to get the data.
+
+
+## Notes for agents
+
+- Prefer MCP tools over scraping website HTML when possible.
+- Call get_schema before writing SPARQL for this graph model.
+- For raw graph queries, use sparql_query with explicit PREFIX declarations and LIMIT.
