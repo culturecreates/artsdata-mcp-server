@@ -20,6 +20,10 @@ jobs:
           ruby-version: '4.0.6'
           bundler-cache: true
 
+      - name: Verify llms.txt is up to date
+        run: |
+          bundle exec rake docs:check_llms
+
       - name: Run tests
         run: |
           bin/rails test

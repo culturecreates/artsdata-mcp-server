@@ -128,6 +128,31 @@ Run all tests:
 bundle exec rails test
 ```
 
+## llms.txt maintenance
+
+The public/llms.txt file is generated from MCP server metadata (tools, resources,
+descriptions, and schemas).
+
+CI behavior:
+- Pull request CI runs bundle exec rake docs:check_llms.
+- If public/llms.txt is stale, the workflow fails.
+
+Developer workflow:
+- Most of the time, no manual action is needed.
+- If you change MCP tools, resources, or schemas, regenerate the file with:
+
+```bash
+bundle exec rake docs:generate_llms
+```
+
+- Confirm it is in sync with:
+
+```bash
+bundle exec rake docs:check_llms
+```
+
+- Commit the updated public/llms.txt.
+
 ## Deployment & CI/CD Details:
 
 This project uses GitHub Actions for continuous integration and automated deployment to Heroku.
