@@ -19,7 +19,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional list of place label; can be empty."
+      "description": "Optional list of places. Each entry is either an place label (e.g. \"Minotaure\") or an Artsdata URI (e.g. \"http://kg.artsdata.ca/resource/K5-69\"); labels and URIs can be mixed. Can be empty."
     },
     "artists": {
       "type": "array",
@@ -27,7 +27,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional list of artists. Each entry is either an artist label (e.g. \"Jane Doe\") or an Artsdata URI (e.g. \"http://kg.artsdata.ca/resource/K1-1\"); labels and URIs can be mixed. Can be empty."
+      "description": "Optional list of artists. Each entry is either an artist label (e.g. \"Jane Watson\") or an Artsdata URI (e.g. \"http://kg.artsdata.ca/resource/K2-6574\"); labels and URIs can be mixed. Can be empty."
     },
     "organizations": {
       "type": "array",
@@ -35,7 +35,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional list of organization label; can be empty."
+      "description": "Optional list of organizations. Each entry is either an organization label (e.g. \"Place Bell\") or an Artsdata URI (e.g. \"http://kg.artsdata.ca/resource/K5-72\"); labels and URIs can be mixed. Can be empty."
     },
     "types": {
       "type": "array",

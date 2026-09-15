@@ -10,6 +10,7 @@ class ArtsdataClient
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
   START_DATE_PROPERTY_ID = 'http://schema.org/startDate'.freeze
   LOCATION_NAME_PROPERTY_ID = 'schema:location/schema:name'.freeze
+  LOCATION_PROPERTY_ID = 'schema:location'.freeze
 
   ORGANIZER_OR_PERFORMER_PROPERTY_ID = 'schema:organizer|schema:performer'.freeze
   ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID = '(schema:organizer|schema:performer)/schema:name'.freeze
@@ -209,51 +210,39 @@ class ArtsdataClient
     agents = Array(artists).compact.union(Array(organizations).compact)
     agent_uris, agent_labels = agents.partition { |agent| agent.to_s.start_with?("http") }
 
+    place_uris, place_labels = places.partition { |place| place.to_s.start_with?("http") }
+
     conditions = []
 
+    # startDate condition
     if startDateFrom.present? || startDateTo.present?
-
       property_value = "#{startDateFrom}/#{startDateTo}" if startDateFrom.present? || startDateTo.present?
-
-      conditions.push({
-                        matchType: "property",
-                        propertyId: START_DATE_PROPERTY_ID,
-                        propertyValue: property_value,
-                        required: true,
-                        matchQualifier: MATCH_QUALIFIER_DATE_RANGE_URI
-                      })
+      conditions.push(add_condition(START_DATE_PROPERTY_ID, property_value, nil, MATCH_QUALIFIER_DATE_RANGE_URI))
     end
 
-    if places.size > 0
-      conditions.push({
-                        matchType: "property",
-                        propertyId: LOCATION_NAME_PROPERTY_ID,
-                        propertyValue: places,
-                        required: true,
-                        matchQuantifier: 'any'
-                      })
+    # Place conditions
+    if place_uris.size > 0
+      conditions.push(add_condition(LOCATION_PROPERTY_ID, place_uris, "any"))
     end
 
+    if place_labels.size > 0
+      conditions.push(add_condition(LOCATION_NAME_PROPERTY_ID, place_labels, "any"))
+    end
+
+    # Agent conditions
     if agent_labels.size > 0
-      conditions.push(agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels))
+      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels, "any"))
     end
 
     if agent_uris.size > 0
-      conditions.push(agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris))
+      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris, "any"))
     end
 
+    # Type conditions
     if type_uris.size == 0
       query_type = "#{SCHEMA_BASE_URL}Event"
     elsif type_uris.size > 1
-      conditions.push({
-                        matchType: 'property',
-                        propertyId: RDF_TYPE_PROPERTY_ID,
-                        propertyValue: type_uris,
-                        required: true,
-                        matchQuantifier: 'any'
-
-                      })
-
+      conditions.push(add_condition(RDF_TYPE_PROPERTY_ID, type_uris, "any"))
       query_type = nil
     else
       query_type = type_uris.first
@@ -269,7 +258,7 @@ class ArtsdataClient
       ]
     }
 
-      data = execute_reconciliation_query(payload, lang: language, route: 'match')
+    data = execute_reconciliation_query(payload, lang: language, route: 'match')
 
     ids = data["results"].flat_map do |result|
       result["candidates"].presence&.map { |c| c["id"] }
@@ -280,16 +269,15 @@ class ArtsdataClient
 
   private
 
-  # An agent (artist or organizer) condition. These are `required: false` so that a match on
-  # any one of them - organizer or performer, by label or by URI - keeps the event.
-  def agent_condition(property_id, property_value)
+  def add_condition(property_id, property_value, match_quantifier, match_qualifier = nil)
     {
       matchType: "property",
       propertyId: property_id,
       propertyValue: property_value,
       required: true,
-      matchQuantifier: 'any'
-    }
+      matchQuantifier: match_quantifier,
+      matchQualifier: match_qualifier
+    }.compact
   end
 
   def execute_query(query, variables = {})
