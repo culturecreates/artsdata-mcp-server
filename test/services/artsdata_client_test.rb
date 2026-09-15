@@ -160,6 +160,40 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                     }
   end
 
+  test "search_events supports filter byb place labels" do
+    payload = search_events_with_captured_match_payload(
+      places: ["Place Bell"]
+    )
+
+    conditions = payload[:queries].first[:conditions]
+
+    assert_includes conditions,
+                    {
+                      matchType: "property",
+                      propertyId: ArtsdataClient::LOCATION_NAME_PROPERTY_ID,
+                      propertyValue: ["Place Bell"],
+                      required: true,
+                      matchQuantifier: "any"
+                    }
+  end
+
+  test "search_events supports filter byb place URIs" do
+    payload = search_events_with_captured_match_payload(
+      places: ["http://kg.artsdata.ca/resource/K5-69"]
+    )
+
+    conditions = payload[:queries].first[:conditions]
+
+    assert_includes conditions,
+                    {
+                      matchType: "property",
+                      propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
+                      propertyValue: ["http://kg.artsdata.ca/resource/K5-69"],
+                      required: true,
+                      matchQuantifier: "any"
+                    }
+  end
+
   test "format_get_entity_results returns an empty array when given no rows" do
     assert_equal [], ArtsdataClient.new.format_get_entity_results([])
   end
