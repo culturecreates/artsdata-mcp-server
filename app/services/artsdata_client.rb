@@ -217,32 +217,32 @@ class ArtsdataClient
     # startDate condition
     if startDateFrom.present? || startDateTo.present?
       property_value = "#{startDateFrom}/#{startDateTo}" if startDateFrom.present? || startDateTo.present?
-      conditions.push(add_condition(START_DATE_PROPERTY_ID, property_value, MATCH_QUALIFIER_DATE_RANGE_URI))
+      conditions.push(add_condition(START_DATE_PROPERTY_ID, property_value, nil, MATCH_QUALIFIER_DATE_RANGE_URI))
     end
 
     # Place conditions
     if place_uris.size > 0
-      conditions.push(add_condition(LOCATION_PROPERTY_ID, place_uris))
+      conditions.push(add_condition(LOCATION_PROPERTY_ID, place_uris, "any"))
     end
 
     if place_labels.size > 0
-      conditions.push(add_condition(LOCATION_NAME_PROPERTY_ID, place_labels))
+      conditions.push(add_condition(LOCATION_NAME_PROPERTY_ID, place_labels, "any"))
     end
 
     # Agent conditions
     if agent_labels.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels))
+      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels, "any"))
     end
 
     if agent_uris.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris))
+      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris, "any"))
     end
 
     # Type conditions
     if type_uris.size == 0
       query_type = "#{SCHEMA_BASE_URL}Event"
     elsif type_uris.size > 1
-      conditions.push(add_condition(RDF_TYPE_PROPERTY_ID, type_uris))
+      conditions.push(add_condition(RDF_TYPE_PROPERTY_ID, type_uris, "any"))
       query_type = nil
     else
       query_type = type_uris.first
@@ -269,13 +269,13 @@ class ArtsdataClient
 
   private
 
-  def add_condition(property_id, property_value, match_qualifier = nil)
+  def add_condition(property_id, property_value, match_quantifier, match_qualifier = nil)
     {
       matchType: "property",
       propertyId: property_id,
       propertyValue: property_value,
       required: true,
-      matchQuantifier: 'any',
+      matchQuantifier: match_quantifier,
       matchQualifier: match_qualifier
     }.compact
   end
