@@ -43,7 +43,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional list of event type labels, e.g. \"MusicPerformance\", \"TheatrePerformance\", \"ComedyPerformance\", \"PerformingArtsEvent\". Can be empty."
+      "description": "Optional list of event type URIs, e.g. \"http://schema.org/Event\", \"http://schema.org/MusicEvent\". Can be empty."
     },
     "language": {
       "type": "string",
