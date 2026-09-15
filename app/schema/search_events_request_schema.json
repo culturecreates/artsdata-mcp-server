@@ -19,7 +19,7 @@
         "type": "string"
       },
       "uniqueItems": true,
-      "description": "Optional list of place label; can be empty."
+      "description": "Optional list of place. Each entry is either an place label (e.g. \"Minotaure\") or an Artsdata URI (e.g. \"http://kg.artsdata.ca/resource/K5-69\"); labels and URIs can be mixed. Can be empty."
     },
     "artists": {
       "type": "array",
