@@ -16,7 +16,8 @@
     "places": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
       "description": "Optional list of SPECIFIC VENUE Artsdata URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-69\"]) for a theatre, hall, auditorium, room, or stage. Resolve venue or geographic place names (e.g., 'Toronto', 'Canada') to a URI using search_entities (types: ['Place']) or sparql_query filtering. Place URIs automatically include events at sub-venues contained within them. Can be left empty."
@@ -24,7 +25,8 @@
     "artists": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
       "description": "Optional list of Artsdata artist URIs (e.g., [\"http://kg.artsdata.ca/resource/K2-6574\"]). If you only have a name, use search_entities (types: ['Person']) to find its URI first. Can be left empty."
@@ -32,7 +34,8 @@
     "organizations": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
       "description": "Optional list of Artsdata organization URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-72\"]). If you only have a name, use search_entities (types: ['Organization']) to find its URI first. Can be left empty."
