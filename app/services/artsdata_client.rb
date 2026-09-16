@@ -243,6 +243,13 @@ class ArtsdataClient
 
   private
 
+  def date_range_condition(start_date_from, start_date_to)
+    return nil if start_date_from.blank? && start_date_to.blank?
+
+    add_condition(START_DATE_PROPERTY_ID, "#{start_date_from}/#{start_date_to}", nil,
+                  MATCH_QUALIFIER_DATE_RANGE_URI)
+  end
+
   def add_condition(property_id, property_value, match_quantifier, match_qualifier = nil)
     {
       matchType: "property",
