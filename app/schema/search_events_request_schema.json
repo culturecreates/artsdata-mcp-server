@@ -40,13 +40,14 @@
       "uniqueItems": true,
       "description": "Optional list of Artsdata organization URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-72\"]). If you only have a name, use search_entities (types: ['Organization']) to find its URI first. Can be left empty."
     },
-    "types": {
+    "has_event_type_concept": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of event type URIs, e.g. \"http://schema.org/Event\", \"http://schema.org/MusicEvent\". Can be empty."
+      "description": "Optional list of Artsdata event type concept URIs (e.g., [\"http://kg.artsdata.ca/resource/ClassicalMusicPerformance\"]), matched on ado:hasEventTypeConcept. These belong to the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes like http://schema.org/MusicEvent. List available concepts using sparql_query: ?concept skos:inScheme <http://kg.artsdata.ca/resource/ArtsdataEventTypes> . Can be left empty."
     },
     "language": {
       "type": "string",
