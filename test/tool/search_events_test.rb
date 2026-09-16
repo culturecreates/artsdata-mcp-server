@@ -9,9 +9,9 @@ class SearchEventsTest < ActiveSupport::TestCase
   FULL_PARAMS = {
     startDateFrom: "2026-01-01",
     startDateTo: "2026-01-31",
-    places: ["Toronto"],
-    artists: ["Jane Doe"],
-    organizations: ["Some Org"],
+    places: ["http://kg.artsdata.ca/resource/K5-69"],
+    artists: ["http://kg.artsdata.ca/resource/K2-6574"],
+    organizations: ["http://kg.artsdata.ca/resource/K5-72"],
     types: ["MusicEvent"],
     language: "fr",
     limit: 10
@@ -135,10 +135,10 @@ class SearchEventsTest < ActiveSupport::TestCase
 
   test "call defaults every unspecified parameter when only one filter is given" do
     mock_client = Minitest::Mock.new
-    mock_client.expect(:search_events, [], [], **DEFAULT_PARAMS.merge(places: ["Montreal"]))
+    mock_client.expect(:search_events, [], [], **DEFAULT_PARAMS.merge(places: ["http://kg.artsdata.ca/resource/K5-69"]))
 
     response = ArtsdataClient.stub :new, mock_client do
-      SearchEvents.call(places: ["Montreal"])
+      SearchEvents.call(places: ["http://kg.artsdata.ca/resource/K5-69"])
     end
     mock_client.verify
 

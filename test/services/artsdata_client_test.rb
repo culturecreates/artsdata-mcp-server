@@ -77,16 +77,6 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   end
 
 
-  test "search_events matches artist URIs on the organizer and performer URI properties" do
-    payload = search_events_with_captured_match_payload(artists: ["http://kg.artsdata.ca/resource/Person-1", "http://kg.artsdata.ca/resource/Person-2"])
-
-    assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, ["http://kg.artsdata.ca/resource/Person-1", "http://kg.artsdata.ca/resource/Person-2"])
-                 ],
-                 add_conditions(payload),
-                 "artist labels should be matched on the organizer and performer name properties"
-  end
-
   test "search_events matches artist URIs on the organizer and performer properties" do
     uris = ["http://kg.artsdata.ca/resource/K1-1", "http://kg.artsdata.ca/resource/K1-2"]
     payload = search_events_with_captured_match_payload(artists: uris)
@@ -95,7 +85,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                    agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, uris)
                  ],
                  add_conditions(payload),
-                 "artist URIs should be matched on the organizer and performer properties, not the name ones"
+                 "every artist URI belongs in one condition on schema:organizer|schema:performer, matched with 'any'"
   end
 
   test "search_events merges organizations with artists from URIs" do
@@ -162,21 +152,42 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                     }
   end
 
-  test "search_events supports filter byb place URIs" do
-    payload = search_events_with_captured_match_payload(
-      places: ["http://kg.artsdata.ca/resource/K5-69"]
-    )
+  test "search_events puts several place URIs in one condition, matched with 'any'" do
+    uris = ["http://kg.artsdata.ca/resource/K5-69", "http://kg.artsdata.ca/resource/K5-72"]
+    payload = search_events_with_captured_match_payload(places: uris)
 
-    conditions = payload[:queries].first[:conditions]
+    location_conditions = payload[:queries].first[:conditions]
+                                           .select { |c| c[:propertyId] == ArtsdataClient::LOCATION_PROPERTY_ID }
 
-    assert_includes conditions,
-                    {
-                      matchType: "property",
-                      propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
-                      propertyValue: ["http://kg.artsdata.ca/resource/K5-69"],
-                      required: true,
-                      matchQuantifier: "any"
-                    }
+    assert_equal [
+                   {
+                     matchType: "property",
+                     propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
+                     propertyValue: uris,
+                     required: true,
+                     matchQuantifier: "any"
+                   }
+                 ], location_conditions
+  end
+
+  test "search_events adds no place condition when places is empty" do
+    payload = search_events_with_captured_match_payload(places: [])
+
+    assert_empty payload[:queries].first[:conditions]
+                                  .select { |c| c[:propertyId] == ArtsdataClient::LOCATION_PROPERTY_ID },
+                 "an empty places list should not add a location condition"
+  end
+
+  # The reconciliation query is deliberately pinned to schema:Event: `types` is accepted by the
+  # tool but not applied yet - the type filter is to be reworked onto ado:hasEventTypeConcept.
+  # This test documents that, and will fail when that work lands, as a reminder to update it.
+  test "search_events always queries type schema:Event and ignores the types argument" do
+    payload = search_events_with_captured_match_payload(types: ["http://schema.org/MusicEvent"])
+    query = payload[:queries].first
+
+    assert_equal "http://schema.org/Event", query[:type]
+    assert_empty query[:conditions].select { |c| c[:propertyId] == ArtsdataClient::RDF_TYPE_PROPERTY_ID },
+                 "no rdf:type condition is built from `types` today"
   end
 
   test "format_get_entity_results returns an empty array when given no rows" do
