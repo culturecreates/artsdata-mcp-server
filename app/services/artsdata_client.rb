@@ -9,11 +9,9 @@ class ArtsdataClient
 
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
   START_DATE_PROPERTY_ID = 'http://schema.org/startDate'.freeze
-  LOCATION_NAME_PROPERTY_ID = 'schema:location/schema:name'.freeze
   LOCATION_PROPERTY_ID = 'schema:location'.freeze
 
   ORGANIZER_OR_PERFORMER_PROPERTY_ID = 'schema:organizer|schema:performer'.freeze
-  ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID = '(schema:organizer|schema:performer)/schema:name'.freeze
 
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
 
