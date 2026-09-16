@@ -252,7 +252,7 @@ class ArtsdataClient
       queries: [
         {
           limit: limit,
-          type: query_type,
+          type: "#{SCHEMA_BASE_URL}Event",
           conditions: conditions
         }.compact
       ]
