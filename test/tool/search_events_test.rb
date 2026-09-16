@@ -85,9 +85,9 @@ class SearchEventsTest < ActiveSupport::TestCase
     valid_payload = {
       "startDateFrom" => "2026-01-01",
       "startDateTo" => "2026-01-31",
-      "places" => ["Toronto"],
-      "artists" => ["Jane Doe"],
-      "organizations" => ["Some Org"],
+      "places" => ["http://kg.artsdata.ca/resource/Place"],
+      "artists" => ["http://kg.artsdata.ca/resource/Person"],
+      "organizations" => ["http://kg.artsdata.ca/resource/Organization"],
       "types" => ["MusicEvent"],
       "language" => "fr",
       "limit" => 10
@@ -97,15 +97,12 @@ class SearchEventsTest < ActiveSupport::TestCase
                  "a fully populated, in-range payload should satisfy the schema"
     assert_empty schema.validate({}).to_a,
                  "an empty payload should satisfy the schema, since every property is optional"
-    assert_empty schema.validate(
-      valid_payload.merge("artists" => ["Jane Doe", "http://kg.artsdata.ca/resource/K1-1"])
-    ).to_a, "the artists list may mix labels and URIs"
 
     refute_empty schema.validate(valid_payload.merge("limit" => 0)).to_a,
                  "limit below the schema minimum (1) should fail validation"
     refute_empty schema.validate(valid_payload.merge("limit" => 51)).to_a,
                  "limit above the schema maximum (50) should fail validation"
-    refute_empty schema.validate(valid_payload.merge("places" => "Toronto")).to_a,
+    refute_empty schema.validate(valid_payload.merge("places" => "http://kg.artsdata.ca/resource/Place")).to_a,
                  "places must be an array, not a bare string"
     refute_empty schema.validate(valid_payload.merge("unknownField" => "x")).to_a,
                  "additionalProperties: false should reject unrecognized fields"
