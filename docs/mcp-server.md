@@ -202,11 +202,11 @@ organization, type, and language.
 |---|---|---|---|
 | `startDateFrom` | string (ISO 8601) | No | Lower bound filter; includes events starting on or after this date/time. |
 | `startDateTo` | string (ISO 8601) | No | Upper bound filter; includes events starting on or before this date/time. |
-| `places` | array of strings | No | Place labels to filter by. |
-| `artists` | array of strings | No | Artist labels to filter by. |
-| `organizations` | array of strings | No | Organization labels to filter by. |
+| `places` | array of URIs | No | Artsdata URIs of specific venues (a theatre, hall, room or stage), e.g. `http://kg.artsdata.ca/resource/K5-69`. Matched on `schema:location`; a venue URI also covers the venues contained within it. Resolve a name with `search_entities` (`types: ["Place"]`). Not for cities, provinces or countries — those are not in the place hierarchy and return nothing. |
+| `artists` | array of URIs | No | Artsdata URIs of people, e.g. `http://kg.artsdata.ca/resource/K2-6574`. Resolve a name with `search_entities` (`types: ["Person"]`). |
+| `organizations` | array of URIs | No | Artsdata URIs of organizations, e.g. `http://kg.artsdata.ca/resource/K5-72`. Matched together with `artists` on `schema:organizer\|schema:performer`. |
 | `types` | array of strings | No | Event type labels to filter by. |
-| `languages` | string | No (default `en`) | Language for matching/labels. |
+| `language` | string | No (default `en`) | Language of the labels in the response. It does not filter events by the language they are performed in. |
 | `limit` | integer (1–50) | No (default 25) | Max number of results. |
 
 **Output**
@@ -235,13 +235,17 @@ Each matching event is returned in the same detailed shape as `get_entity`
 }
 ```
 
+Labels are no longer accepted for `places`, `artists` or `organizations`: pass
+URIs, resolving names with `search_entities` first.
+
 **Example call**
 
 ```json
 {
   "name": "search_events",
   "arguments": {
-    "organizations": ["Cirque du Soleil"],
+    "organizations": ["http://kg.artsdata.ca/resource/K5-72"],
+    "startDateFrom": "2026-09-01",
     "limit": 10
   }
 }
