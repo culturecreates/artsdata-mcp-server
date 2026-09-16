@@ -36,7 +36,7 @@ Output
 
 ### search_events
 
-Tool to search for events in the Artsdata knowledge graph by place, artist, organization, type and language.
+Tool to search for events in the Artsdata knowledge graph by place, artist, organization, event type concept and language.
 
 Input parameters
 - startDateFrom (string, optional): Optional lower bound filter. Includes events starting on or after this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ).
@@ -44,7 +44,7 @@ Input parameters
 - places (array, optional): Optional list of SPECIFIC VENUE Artsdata URIs (e.g., ["http://kg.artsdata.ca/resource/K5-69"]) for a theatre, hall, auditorium, room, or stage. Resolve venue or geographic place names (e.g., 'Toronto', 'Canada') to a URI using search_entities (types: ['Place']) or sparql_query filtering. Place URIs automatically include events at sub-venues contained within them. Can be left empty.
 - artists (array, optional): Optional list of Artsdata artist URIs (e.g., ["http://kg.artsdata.ca/resource/K2-6574"]). If you only have a name, use search_entities (types: ['Person']) to find its URI first. Can be left empty.
 - organizations (array, optional): Optional list of Artsdata organization URIs (e.g., ["http://kg.artsdata.ca/resource/K5-72"]). If you only have a name, use search_entities (types: ['Organization']) to find its URI first. Can be left empty.
-- types (array, optional): Optional list of event type URIs, e.g. "http://schema.org/Event", "http://schema.org/MusicEvent". Can be empty.
+- has_event_type_concept (array, optional): Optional list of Artsdata event type concept URIs (e.g., ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"]), matched on ado:hasEventTypeConcept. These belong to the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes like http://schema.org/MusicEvent. List available concepts using sparql_query: ?concept skos:inScheme <http://kg.artsdata.ca/resource/ArtsdataEventTypes> . Can be left empty.
 - language (string, optional, default en): Language for the labels in the response (e.g. 'en', 'fr'); default is 'en'. This selects the output language only — it does NOT filter events by the language they are performed in.
 - limit (integer, optional, default 25, min 1, max 50): Number of results to return.
 
