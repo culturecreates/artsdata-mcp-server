@@ -77,13 +77,13 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   end
 
 
-  test "search_events matches artist labels on the organizer and performer name properties" do
-    payload = search_events_with_captured_match_payload(artists: ["Jane Doe", "John Roe"])
+  test "search_events matches artist URIs on the organizer and performer URI properties" do
+    payload = search_events_with_captured_match_payload(artists: ["http://kg.artsdata.ca/resource/Person-1", "http://kg.artsdata.ca/resource/Person-2"])
 
     assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ["Jane Doe", "John Roe"])
+                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, ["http://kg.artsdata.ca/resource/Person-1", "http://kg.artsdata.ca/resource/Person-2"])
                  ],
-                 agent_conditions(payload),
+                 add_conditions(payload),
                  "artist labels should be matched on the organizer and performer name properties"
   end
 
@@ -94,41 +94,26 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_equal [
                    agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, uris)
                  ],
-                 agent_conditions(payload),
+                 add_conditions(payload),
                  "artist URIs should be matched on the organizer and performer properties, not the name ones"
   end
 
-  test "search_events matches a mix of artist labels and URIs on both sets of properties" do
-    uri = "http://kg.artsdata.ca/resource/K1-1"
-    payload = search_events_with_captured_match_payload(artists: ["Jane Doe", uri])
-
-    assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ["Jane Doe"]),
-                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [uri])
-                 ],
-                 agent_conditions(payload),
-                 "a mixed artists list should produce label conditions and URI conditions side by side"
-  end
-
-  test "search_events merges organizations with artists, splitting labels from URIs" do
+  test "search_events merges organizations with artists from URIs" do
     artist_uri = "http://kg.artsdata.ca/resource/K1-1"
     org_uri = "http://kg.artsdata.ca/resource/K2-2"
     payload = search_events_with_captured_match_payload(
-      artists: ["Jane Doe", artist_uri],
-      organizations: ["Some Org", org_uri]
+      artists: [artist_uri],
+      organizations: [org_uri]
     )
 
-    assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ["Jane Doe", "Some Org"]),
-                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [artist_uri, org_uri])
-                 ],
-                 agent_conditions(payload)
+    assert_equal [agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [artist_uri, org_uri])],
+                 add_conditions(payload)
   end
 
   test "search_events adds no agent conditions when artists and organizations are empty" do
     payload = search_events_with_captured_match_payload(artists: [], organizations: [])
 
-    assert_empty agent_conditions(payload),
+    assert_empty add_conditions(payload),
                  "an empty artists/organizations list should not add any agent condition"
   end
 
@@ -136,8 +121,8 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     payload = search_events_with_captured_match_payload(
       startDateFrom: "2026-01-01",
       startDateTo: "2026-01-31",
-      places: ["Toronto"],
-      artists: ["http://kg.artsdata.ca/resource/K1-1"]
+      places: ["http://kg.artsdata.ca/resource/KP-1"],
+      artists: ["http://kg.artsdata.ca/resource/KA-1"]
     )
 
     conditions = payload[:queries].first[:conditions]
@@ -153,16 +138,16 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_includes conditions,
                     {
                       matchType: "property",
-                      propertyId: ArtsdataClient::LOCATION_NAME_PROPERTY_ID,
-                      propertyValue: ["Toronto"],
+                      propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
+                      propertyValue: ["http://kg.artsdata.ca/resource/KP-1"],
                       required: true,
                       matchQuantifier: "any"
                     }
   end
 
-  test "search_events supports filter byb place labels" do
+  test "search_events supports filter by place URIs" do
     payload = search_events_with_captured_match_payload(
-      places: ["Place Bell"]
+      places: ["http://kg.artsdata.ca/resource/Place"]
     )
 
     conditions = payload[:queries].first[:conditions]
@@ -170,8 +155,8 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_includes conditions,
                     {
                       matchType: "property",
-                      propertyId: ArtsdataClient::LOCATION_NAME_PROPERTY_ID,
-                      propertyValue: ["Place Bell"],
+                      propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
+                      propertyValue: ["http://kg.artsdata.ca/resource/Place"],
                       required: true,
                       matchQuantifier: "any"
                     }
@@ -246,9 +231,6 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   private
 
   ORGANIZER_OR_PERFORMER_PROPERTY_ID  = ArtsdataClient::ORGANIZER_OR_PERFORMER_PROPERTY_ID
-  ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID = ArtsdataClient::ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID
-
-  AGENT_PROPERTY_IDS = [ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ORGANIZER_OR_PERFORMER_PROPERTY_ID].freeze
 
   SEARCH_EVENTS_DEFAULT_PARAMS = {
     startDateFrom: nil, startDateTo: nil, places: [], artists: [],
@@ -271,9 +253,9 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     captured.fetch("match")
   end
 
-  # The agent (artist/organization) conditions of a match payload, in the order they were added.
-  def agent_conditions(payload)
-    payload[:queries].first[:conditions].select { |condition| AGENT_PROPERTY_IDS.include?(condition[:propertyId]) }
+  # The conditions of a match payload, in the order they were added.
+  def add_conditions(payload)
+    payload[:queries].first[:conditions].select { |condition| ORGANIZER_OR_PERFORMER_PROPERTY_ID.include?(condition[:propertyId]) }
   end
 
   def agent_condition(property_id, property_value)
