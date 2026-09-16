@@ -69,7 +69,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     result = client.stub(:execute_reconciliation_query, stubbed_recon_query) do
       client.search_events(
         startDateFrom: "2026-01-01", startDateTo: "", places: [], artists: [],
-        organizations: [], types: [], language: "en", limit: 25
+        organizations: [], has_event_type_concept: [], language: "en", limit: 25
       )
     end
 
@@ -135,23 +135,6 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                     }
   end
 
-  test "search_events supports filter by place URIs" do
-    payload = search_events_with_captured_match_payload(
-      places: ["http://kg.artsdata.ca/resource/Place"]
-    )
-
-    conditions = payload[:queries].first[:conditions]
-
-    assert_includes conditions,
-                    {
-                      matchType: "property",
-                      propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
-                      propertyValue: ["http://kg.artsdata.ca/resource/Place"],
-                      required: true,
-                      matchQuantifier: "any"
-                    }
-  end
-
   test "search_events puts several place URIs in one condition, matched with 'any'" do
     uris = ["http://kg.artsdata.ca/resource/K5-69", "http://kg.artsdata.ca/resource/K5-72"]
     payload = search_events_with_captured_match_payload(places: uris)
@@ -178,16 +161,66 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                  "an empty places list should not add a location condition"
   end
 
-  # The reconciliation query is deliberately pinned to schema:Event: `types` is accepted by the
-  # tool but not applied yet - the type filter is to be reworked onto ado:hasEventTypeConcept.
-  # This test documents that, and will fail when that work lands, as a reminder to update it.
-  test "search_events always queries type schema:Event and ignores the types argument" do
-    payload = search_events_with_captured_match_payload(types: ["http://schema.org/MusicEvent"])
+  test "search_events matches event type concept URIs on ado:hasEventTypeConcept" do
+    uri = "http://kg.artsdata.ca/resource/ClassicalMusicPerformance"
+    payload = search_events_with_captured_match_payload(has_event_type_concept: [uri])
+
+    assert_equal [
+                   {
+                     matchType: "property",
+                     propertyId: ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID,
+                     propertyValue: [uri],
+                     required: true
+                   }
+                 ], event_type_conditions(payload),
+                 "the condition carries no matchQuantifier or matchQualifier"
+  end
+
+  test "search_events puts several event type concept URIs in one condition" do
+    uris = ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance",
+            "http://kg.artsdata.ca/resource/CircusPerformance"]
+    payload = search_events_with_captured_match_payload(has_event_type_concept: uris)
+
+    assert_equal [uris], event_type_conditions(payload).map { |c| c[:propertyValue] }
+  end
+
+  test "search_events adds no event type condition when has_event_type_concept is empty" do
+    assert_empty event_type_conditions(search_events_with_captured_match_payload(has_event_type_concept: [])),
+                 "an empty has_event_type_concept list should not add a condition"
+  end
+
+  test "search_events always queries type schema:Event, whatever the event type concepts are" do
+    payload = search_events_with_captured_match_payload(
+      has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"]
+    )
     query = payload[:queries].first
 
     assert_equal "http://schema.org/Event", query[:type]
     assert_empty query[:conditions].select { |c| c[:propertyId] == ArtsdataClient::RDF_TYPE_PROPERTY_ID },
-                 "no rdf:type condition is built from `types` today"
+                 "event types are not matched on rdf:type"
+  end
+
+  test "search_events builds one condition per filter, in a stable order" do
+    payload = search_events_with_captured_match_payload(
+      startDateFrom: "2026-01-01",
+      startDateTo: "2026-01-31",
+      places: ["http://kg.artsdata.ca/resource/K5-69"],
+      artists: ["http://kg.artsdata.ca/resource/K2-6574"],
+      organizations: ["http://kg.artsdata.ca/resource/K5-72"],
+      has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"]
+    )
+
+    assert_equal [
+                   ArtsdataClient::START_DATE_PROPERTY_ID,
+                   ArtsdataClient::LOCATION_PROPERTY_ID,
+                   ORGANIZER_OR_PERFORMER_PROPERTY_ID,
+                   ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID
+                 ], payload[:queries].first[:conditions].map { |c| c[:propertyId] }
+  end
+
+  test "search_events sends no conditions at all when no filter is given" do
+    assert_empty search_events_with_captured_match_payload[:queries].first[:conditions],
+                 "an unfiltered search should send an empty condition list, not a nil entry"
   end
 
   test "format_get_entity_results returns an empty array when given no rows" do
@@ -245,7 +278,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
 
   SEARCH_EVENTS_DEFAULT_PARAMS = {
     startDateFrom: nil, startDateTo: nil, places: [], artists: [],
-    organizations: [], types: [], language: "en", limit: 25
+    organizations: [], has_event_type_concept: [], language: "en", limit: 25
   }.freeze
 
   def search_events_with_captured_match_payload(**params)
@@ -267,6 +300,11 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   # The conditions of a match payload, in the order they were added.
   def add_conditions(payload)
     payload[:queries].first[:conditions].select { |condition| ORGANIZER_OR_PERFORMER_PROPERTY_ID.include?(condition[:propertyId]) }
+  end
+
+  def event_type_conditions(payload)
+    payload[:queries].first[:conditions]
+                     .select { |c| c[:propertyId] == ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID }
   end
 
   def agent_condition(property_id, property_value)

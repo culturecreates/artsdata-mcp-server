@@ -12,7 +12,7 @@ class SearchEventsTest < ActiveSupport::TestCase
     places: ["http://kg.artsdata.ca/resource/K5-69"],
     artists: ["http://kg.artsdata.ca/resource/K2-6574"],
     organizations: ["http://kg.artsdata.ca/resource/K5-72"],
-    types: ["MusicEvent"],
+    has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"],
     language: "fr",
     limit: 10
   }.freeze
@@ -23,7 +23,7 @@ class SearchEventsTest < ActiveSupport::TestCase
     places: [],
     artists: [],
     organizations: [],
-    types: [],
+    has_event_type_concept: [],
     language: "en",
     limit: 25
   }.freeze
@@ -88,7 +88,7 @@ class SearchEventsTest < ActiveSupport::TestCase
       "places" => ["http://kg.artsdata.ca/resource/Place"],
       "artists" => ["http://kg.artsdata.ca/resource/Person"],
       "organizations" => ["http://kg.artsdata.ca/resource/Organization"],
-      "types" => ["MusicEvent"],
+      "has_event_type_concept" => ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"],
       "language" => "fr",
       "limit" => 10
     }
@@ -106,6 +106,8 @@ class SearchEventsTest < ActiveSupport::TestCase
                  "places must be an array, not a bare string"
     refute_empty schema.validate(valid_payload.merge("unknownField" => "x")).to_a,
                  "additionalProperties: false should reject unrecognized fields"
+    refute_empty schema.validate(valid_payload.merge("types" => ["MusicEvent"])).to_a,
+                 "`types` was replaced by `has_event_type_concept` and is no longer accepted"
   end
 
   test "call forwards every supported parameter to ArtsdataClient#search_events" do
