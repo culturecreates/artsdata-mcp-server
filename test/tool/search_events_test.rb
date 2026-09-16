@@ -9,10 +9,10 @@ class SearchEventsTest < ActiveSupport::TestCase
   FULL_PARAMS = {
     startDateFrom: "2026-01-01",
     startDateTo: "2026-01-31",
-    places: ["Toronto"],
-    artists: ["Jane Doe"],
-    organizations: ["Some Org"],
-    types: ["MusicEvent"],
+    places: ["http://kg.artsdata.ca/resource/K5-69"],
+    artists: ["http://kg.artsdata.ca/resource/K2-6574"],
+    organizations: ["http://kg.artsdata.ca/resource/K5-72"],
+    has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"],
     language: "fr",
     limit: 10
   }.freeze
@@ -23,7 +23,7 @@ class SearchEventsTest < ActiveSupport::TestCase
     places: [],
     artists: [],
     organizations: [],
-    types: [],
+    has_event_type_concept: [],
     language: "en",
     limit: 25
   }.freeze
@@ -85,10 +85,10 @@ class SearchEventsTest < ActiveSupport::TestCase
     valid_payload = {
       "startDateFrom" => "2026-01-01",
       "startDateTo" => "2026-01-31",
-      "places" => ["Toronto"],
-      "artists" => ["Jane Doe"],
-      "organizations" => ["Some Org"],
-      "types" => ["MusicEvent"],
+      "places" => ["http://kg.artsdata.ca/resource/Place"],
+      "artists" => ["http://kg.artsdata.ca/resource/Person"],
+      "organizations" => ["http://kg.artsdata.ca/resource/Organization"],
+      "has_event_type_concept" => ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"],
       "language" => "fr",
       "limit" => 10
     }
@@ -97,18 +97,17 @@ class SearchEventsTest < ActiveSupport::TestCase
                  "a fully populated, in-range payload should satisfy the schema"
     assert_empty schema.validate({}).to_a,
                  "an empty payload should satisfy the schema, since every property is optional"
-    assert_empty schema.validate(
-      valid_payload.merge("artists" => ["Jane Doe", "http://kg.artsdata.ca/resource/K1-1"])
-    ).to_a, "the artists list may mix labels and URIs"
 
     refute_empty schema.validate(valid_payload.merge("limit" => 0)).to_a,
                  "limit below the schema minimum (1) should fail validation"
     refute_empty schema.validate(valid_payload.merge("limit" => 51)).to_a,
                  "limit above the schema maximum (50) should fail validation"
-    refute_empty schema.validate(valid_payload.merge("places" => "Toronto")).to_a,
+    refute_empty schema.validate(valid_payload.merge("places" => "http://kg.artsdata.ca/resource/Place")).to_a,
                  "places must be an array, not a bare string"
     refute_empty schema.validate(valid_payload.merge("unknownField" => "x")).to_a,
                  "additionalProperties: false should reject unrecognized fields"
+    refute_empty schema.validate(valid_payload.merge("types" => ["MusicEvent"])).to_a,
+                 "`types` was replaced by `has_event_type_concept` and is no longer accepted"
   end
 
   test "call forwards every supported parameter to ArtsdataClient#search_events" do
@@ -138,10 +137,10 @@ class SearchEventsTest < ActiveSupport::TestCase
 
   test "call defaults every unspecified parameter when only one filter is given" do
     mock_client = Minitest::Mock.new
-    mock_client.expect(:search_events, [], [], **DEFAULT_PARAMS.merge(places: ["Montreal"]))
+    mock_client.expect(:search_events, [], [], **DEFAULT_PARAMS.merge(places: ["http://kg.artsdata.ca/resource/K5-69"]))
 
     response = ArtsdataClient.stub :new, mock_client do
-      SearchEvents.call(places: ["Montreal"])
+      SearchEvents.call(places: ["http://kg.artsdata.ca/resource/K5-69"])
     end
     mock_client.verify
 

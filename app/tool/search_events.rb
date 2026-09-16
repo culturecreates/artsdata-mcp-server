@@ -1,6 +1,6 @@
 class SearchEvents < MCP::Tool
 
-  description "Tool to search for events in the Artsdata knowledge graph by place, artist, organization, type and language."
+  description "Tool to search for events in the Artsdata knowledge graph by place, artist, organization, event type concept and language."
 
   request_schema_path = File.expand_path("../schema/search_events_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
@@ -12,8 +12,8 @@ class SearchEvents < MCP::Tool
   output_schema(RESPONSE_SCHEMA)
 
   class << self
-    def call(startDateFrom: nil, startDateTo: nil, places: [], artists: [], organizations: [], types: [],
-             language: 'en', limit: 25)
+    def call(startDateFrom: nil, startDateTo: nil, places: [], artists: [], organizations: [],
+             has_event_type_concept: [], language: 'en', limit: 25)
 
       result = ArtsdataClient.new.search_events(
         startDateFrom: startDateFrom,
@@ -21,7 +21,7 @@ class SearchEvents < MCP::Tool
         places: places,
         artists: artists,
         organizations: organizations,
-        types: types,
+        has_event_type_concept: has_event_type_concept,
         language: language,
         limit: limit
       )

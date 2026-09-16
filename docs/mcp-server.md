@@ -194,20 +194,22 @@ Retrieve full details for a single entity, given its Artsdata URI.
 ### `search_events`
 
 Search for events in the Artsdata knowledge graph by place, artist,
-organization, type, and language.
+organization, event type concept, and language. The reconciliation query is
+always typed `schema:Event`; event types are filtered on
+`ado:hasEventTypeConcept`, not on `rdf:type`.
 
 **Input**
 
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `startDateFrom` | string (ISO 8601) | No | Lower bound filter; includes events starting on or after this date/time. |
-| `startDateTo` | string (ISO 8601) | No | Upper bound filter; includes events starting on or before this date/time. |
-| `places` | array of strings | No | Place labels to filter by. |
-| `artists` | array of strings | No | Artist labels to filter by. |
-| `organizations` | array of strings | No | Organization labels to filter by. |
-| `types` | array of strings | No | Event type labels to filter by. |
-| `languages` | string | No (default `en`) | Language for matching/labels. |
-| `limit` | integer (1–50) | No (default 25) | Max number of results. |
+| Parameter | Type | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
+|---|---|---|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `startDateFrom` | string (ISO 8601) | No | Lower bound filter; includes events starting on or after this date/time.                                                                                                                                                                                                                                                                                                                                     |
+| `startDateTo` | string (ISO 8601) | No | Upper bound filter; includes events starting on or before this date/time.                                                                                                                                                                                                                                                                                                                                    |
+| `places` | array of URIs | No | Artsdata URIs of specific venues (a theatre, hall, room or stage), e.g. `http://kg.artsdata.ca/resource/K5-69`. Matched on `schema:location`; a venue URI also covers the venues contained within it. Resolve a name with `search_entities` (`types: ["Place"]`). Not for cities, provinces or countries — those are not in the place hierarchy and return nothing.                                          |
+| `artists` | array of URIs | No | Artsdata URIs of people, e.g. `http://kg.artsdata.ca/resource/K2-6574`. Resolve a name with `search_entities` (`types: ["Person"]`).                                                                                                                                                                                                                                                                         |
+| `organizations` | array of URIs | No | Artsdata URIs of organizations, e.g. `http://kg.artsdata.ca/resource/K5-72`. Matched together with `artists` on `schema:organizer\|schema:performer`.                                                                                                                                                                                                                                                        |
+| `has_event_type_concept` | array of URIs | No | Artsdata event type concept URIs, e.g. `http://kg.artsdata.ca/resource/ClassicalMusicPerformance`, matched on `ado:hasEventTypeConcept`. These are concepts of the Artsdata Event Types vocabulary (`adr:ArtsdataEventTypes`), not schema.org classes such as `http://schema.org/MusicEvent`. List them with `sparql_query`: `?concept skos:inScheme <http://kg.artsdata.ca/resource/ArtsdataEventTypes> .`. |
+| `language` | string | No (default `en`) | Language of the labels in the response. It does not filter events by the language they are performed in.                                                                                                                                                                                                                                                                                                     |
+| `limit` | integer (1–50) | No (default 25) | Max number of results.                                                                                                                                                                                                                                                                                                                                                                                       |
 
 **Output**
 
@@ -235,13 +237,18 @@ Each matching event is returned in the same detailed shape as `get_entity`
 }
 ```
 
+Labels are no longer accepted for `places`, `artists` or `organizations`: pass
+URIs, resolving names with `search_entities` first.
+
 **Example call**
 
 ```json
 {
   "name": "search_events",
   "arguments": {
-    "organizations": ["Cirque du Soleil"],
+    "organizations": ["http://kg.artsdata.ca/resource/K5-72"],
+    "has_event_type_concept": ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"],
+    "startDateFrom": "2026-09-01",
     "limit": 10
   }
 }

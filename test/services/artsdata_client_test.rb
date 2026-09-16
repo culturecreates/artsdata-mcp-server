@@ -69,23 +69,13 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     result = client.stub(:execute_reconciliation_query, stubbed_recon_query) do
       client.search_events(
         startDateFrom: "2026-01-01", startDateTo: "", places: [], artists: [],
-        organizations: [], types: [], language: "en", limit: 25
+        organizations: [], has_event_type_concept: [], language: "en", limit: 25
       )
     end
 
     assert_equal expected_result, result
   end
 
-
-  test "search_events matches artist labels on the organizer and performer name properties" do
-    payload = search_events_with_captured_match_payload(artists: ["Jane Doe", "John Roe"])
-
-    assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ["Jane Doe", "John Roe"])
-                 ],
-                 agent_conditions(payload),
-                 "artist labels should be matched on the organizer and performer name properties"
-  end
 
   test "search_events matches artist URIs on the organizer and performer properties" do
     uris = ["http://kg.artsdata.ca/resource/K1-1", "http://kg.artsdata.ca/resource/K1-2"]
@@ -94,41 +84,26 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_equal [
                    agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, uris)
                  ],
-                 agent_conditions(payload),
-                 "artist URIs should be matched on the organizer and performer properties, not the name ones"
+                 add_conditions(payload),
+                 "every artist URI belongs in one condition on schema:organizer|schema:performer, matched with 'any'"
   end
 
-  test "search_events matches a mix of artist labels and URIs on both sets of properties" do
-    uri = "http://kg.artsdata.ca/resource/K1-1"
-    payload = search_events_with_captured_match_payload(artists: ["Jane Doe", uri])
-
-    assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ["Jane Doe"]),
-                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [uri])
-                 ],
-                 agent_conditions(payload),
-                 "a mixed artists list should produce label conditions and URI conditions side by side"
-  end
-
-  test "search_events merges organizations with artists, splitting labels from URIs" do
+  test "search_events merges organizations with artists from URIs" do
     artist_uri = "http://kg.artsdata.ca/resource/K1-1"
     org_uri = "http://kg.artsdata.ca/resource/K2-2"
     payload = search_events_with_captured_match_payload(
-      artists: ["Jane Doe", artist_uri],
-      organizations: ["Some Org", org_uri]
+      artists: [artist_uri],
+      organizations: [org_uri]
     )
 
-    assert_equal [
-                   agent_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ["Jane Doe", "Some Org"]),
-                   agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [artist_uri, org_uri])
-                 ],
-                 agent_conditions(payload)
+    assert_equal [agent_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, [artist_uri, org_uri])],
+                 add_conditions(payload)
   end
 
   test "search_events adds no agent conditions when artists and organizations are empty" do
     payload = search_events_with_captured_match_payload(artists: [], organizations: [])
 
-    assert_empty agent_conditions(payload),
+    assert_empty add_conditions(payload),
                  "an empty artists/organizations list should not add any agent condition"
   end
 
@@ -136,8 +111,8 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     payload = search_events_with_captured_match_payload(
       startDateFrom: "2026-01-01",
       startDateTo: "2026-01-31",
-      places: ["Toronto"],
-      artists: ["http://kg.artsdata.ca/resource/K1-1"]
+      places: ["http://kg.artsdata.ca/resource/KP-1"],
+      artists: ["http://kg.artsdata.ca/resource/KA-1"]
     )
 
     conditions = payload[:queries].first[:conditions]
@@ -153,45 +128,99 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_includes conditions,
                     {
                       matchType: "property",
-                      propertyId: ArtsdataClient::LOCATION_NAME_PROPERTY_ID,
-                      propertyValue: ["Toronto"],
-                      required: true,
-                      matchQuantifier: "any"
-                    }
-  end
-
-  test "search_events supports filter byb place labels" do
-    payload = search_events_with_captured_match_payload(
-      places: ["Place Bell"]
-    )
-
-    conditions = payload[:queries].first[:conditions]
-
-    assert_includes conditions,
-                    {
-                      matchType: "property",
-                      propertyId: ArtsdataClient::LOCATION_NAME_PROPERTY_ID,
-                      propertyValue: ["Place Bell"],
-                      required: true,
-                      matchQuantifier: "any"
-                    }
-  end
-
-  test "search_events supports filter byb place URIs" do
-    payload = search_events_with_captured_match_payload(
-      places: ["http://kg.artsdata.ca/resource/K5-69"]
-    )
-
-    conditions = payload[:queries].first[:conditions]
-
-    assert_includes conditions,
-                    {
-                      matchType: "property",
                       propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
-                      propertyValue: ["http://kg.artsdata.ca/resource/K5-69"],
+                      propertyValue: ["http://kg.artsdata.ca/resource/KP-1"],
                       required: true,
                       matchQuantifier: "any"
                     }
+  end
+
+  test "search_events puts several place URIs in one condition, matched with 'any'" do
+    uris = ["http://kg.artsdata.ca/resource/K5-69", "http://kg.artsdata.ca/resource/K5-72"]
+    payload = search_events_with_captured_match_payload(places: uris)
+
+    location_conditions = payload[:queries].first[:conditions]
+                                           .select { |c| c[:propertyId] == ArtsdataClient::LOCATION_PROPERTY_ID }
+
+    assert_equal [
+                   {
+                     matchType: "property",
+                     propertyId: ArtsdataClient::LOCATION_PROPERTY_ID,
+                     propertyValue: uris,
+                     required: true,
+                     matchQuantifier: "any"
+                   }
+                 ], location_conditions
+  end
+
+  test "search_events adds no place condition when places is empty" do
+    payload = search_events_with_captured_match_payload(places: [])
+
+    assert_empty payload[:queries].first[:conditions]
+                                  .select { |c| c[:propertyId] == ArtsdataClient::LOCATION_PROPERTY_ID },
+                 "an empty places list should not add a location condition"
+  end
+
+  test "search_events matches event type concept URIs on ado:hasEventTypeConcept" do
+    uri = "http://kg.artsdata.ca/resource/ClassicalMusicPerformance"
+    payload = search_events_with_captured_match_payload(has_event_type_concept: [uri])
+
+    assert_equal [
+                   {
+                     matchType: "property",
+                     propertyId: ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID,
+                     propertyValue: [uri],
+                     required: true
+                   }
+                 ], event_type_conditions(payload),
+                 "the condition carries no matchQuantifier or matchQualifier"
+  end
+
+  test "search_events puts several event type concept URIs in one condition" do
+    uris = ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance",
+            "http://kg.artsdata.ca/resource/CircusPerformance"]
+    payload = search_events_with_captured_match_payload(has_event_type_concept: uris)
+
+    assert_equal [uris], event_type_conditions(payload).map { |c| c[:propertyValue] }
+  end
+
+  test "search_events adds no event type condition when has_event_type_concept is empty" do
+    assert_empty event_type_conditions(search_events_with_captured_match_payload(has_event_type_concept: [])),
+                 "an empty has_event_type_concept list should not add a condition"
+  end
+
+  test "search_events always queries type schema:Event, whatever the event type concepts are" do
+    payload = search_events_with_captured_match_payload(
+      has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"]
+    )
+    query = payload[:queries].first
+
+    assert_equal "http://schema.org/Event", query[:type]
+    assert_empty query[:conditions].select { |c| c[:propertyId] == ArtsdataClient::RDF_TYPE_PROPERTY_ID },
+                 "event types are not matched on rdf:type"
+  end
+
+  test "search_events builds one condition per filter, in a stable order" do
+    payload = search_events_with_captured_match_payload(
+      startDateFrom: "2026-01-01",
+      startDateTo: "2026-01-31",
+      places: ["http://kg.artsdata.ca/resource/K5-69"],
+      artists: ["http://kg.artsdata.ca/resource/K2-6574"],
+      organizations: ["http://kg.artsdata.ca/resource/K5-72"],
+      has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"]
+    )
+
+    assert_equal [
+                   ArtsdataClient::START_DATE_PROPERTY_ID,
+                   ArtsdataClient::LOCATION_PROPERTY_ID,
+                   ORGANIZER_OR_PERFORMER_PROPERTY_ID,
+                   ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID
+                 ], payload[:queries].first[:conditions].map { |c| c[:propertyId] }
+  end
+
+  test "search_events sends no conditions at all when no filter is given" do
+    assert_empty search_events_with_captured_match_payload[:queries].first[:conditions],
+                 "an unfiltered search should send an empty condition list, not a nil entry"
   end
 
   test "format_get_entity_results returns an empty array when given no rows" do
@@ -246,13 +275,10 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   private
 
   ORGANIZER_OR_PERFORMER_PROPERTY_ID  = ArtsdataClient::ORGANIZER_OR_PERFORMER_PROPERTY_ID
-  ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID = ArtsdataClient::ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID
-
-  AGENT_PROPERTY_IDS = [ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, ORGANIZER_OR_PERFORMER_PROPERTY_ID].freeze
 
   SEARCH_EVENTS_DEFAULT_PARAMS = {
     startDateFrom: nil, startDateTo: nil, places: [], artists: [],
-    organizations: [], types: [], language: "en", limit: 25
+    organizations: [], has_event_type_concept: [], language: "en", limit: 25
   }.freeze
 
   def search_events_with_captured_match_payload(**params)
@@ -271,9 +297,14 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     captured.fetch("match")
   end
 
-  # The agent (artist/organization) conditions of a match payload, in the order they were added.
-  def agent_conditions(payload)
-    payload[:queries].first[:conditions].select { |condition| AGENT_PROPERTY_IDS.include?(condition[:propertyId]) }
+  # The conditions of a match payload, in the order they were added.
+  def add_conditions(payload)
+    payload[:queries].first[:conditions].select { |condition| ORGANIZER_OR_PERFORMER_PROPERTY_ID.include?(condition[:propertyId]) }
+  end
+
+  def event_type_conditions(payload)
+    payload[:queries].first[:conditions]
+                     .select { |c| c[:propertyId] == ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID }
   end
 
   def agent_condition(property_id, property_value)

@@ -9,12 +9,14 @@ class ArtsdataClient
 
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
   START_DATE_PROPERTY_ID = 'http://schema.org/startDate'.freeze
-  LOCATION_NAME_PROPERTY_ID = 'schema:location/schema:name'.freeze
   LOCATION_PROPERTY_ID = 'schema:location'.freeze
 
   ORGANIZER_OR_PERFORMER_PROPERTY_ID = 'schema:organizer|schema:performer'.freeze
-  ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID = '(schema:organizer|schema:performer)/schema:name'.freeze
+  HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID = 'http://kg.artsdata.ca/ontology/hasEventTypeConcept'.freeze
 
+  EVENT_TYPE_URI = "#{SCHEMA_BASE_URL}Event".freeze
+
+  MATCH_QUANTIFIER_ANY = 'any'.freeze
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
 
   attr_reader :reconciliation_endpoint
@@ -203,57 +205,30 @@ class ArtsdataClient
     body = execute_reconciliation_query(payload, route: 'extend')
     format_get_entity_results(body.fetch("rows", []))
   end
-  def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:, types:, language:, limit:)
-    types_array = Array(types).compact
-    type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
 
-    agents = Array(artists).compact.union(Array(organizations).compact)
-    agent_uris, agent_labels = agents.partition { |agent| agent.to_s.start_with?("http") }
 
-    place_uris, place_labels = places.partition { |place| place.to_s.start_with?("http") }
+  def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:,
+                    has_event_type_concept:, language:, limit:)
 
-    conditions = []
+    uri_filters = [
+      [LOCATION_PROPERTY_ID, places, MATCH_QUANTIFIER_ANY],
+      [ORGANIZER_OR_PERFORMER_PROPERTY_ID, Array(artists).compact | Array(organizations).compact,
+       MATCH_QUANTIFIER_ANY],
+      [HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID, has_event_type_concept, nil]
+    ]
 
-    # startDate condition
-    if startDateFrom.present? || startDateTo.present?
-      property_value = "#{startDateFrom}/#{startDateTo}" if startDateFrom.present? || startDateTo.present?
-      conditions.push(add_condition(START_DATE_PROPERTY_ID, property_value, nil, MATCH_QUALIFIER_DATE_RANGE_URI))
-    end
-
-    # Place conditions
-    if place_uris.size > 0
-      conditions.push(add_condition(LOCATION_PROPERTY_ID, place_uris, "any"))
-    end
-
-    if place_labels.size > 0
-      conditions.push(add_condition(LOCATION_NAME_PROPERTY_ID, place_labels, "any"))
-    end
-
-    # Agent conditions
-    if agent_labels.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels, "any"))
-    end
-
-    if agent_uris.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris, "any"))
-    end
-
-    # Type conditions
-    if type_uris.size == 0
-      query_type = "#{SCHEMA_BASE_URL}Event"
-    elsif type_uris.size > 1
-      conditions.push(add_condition(RDF_TYPE_PROPERTY_ID, type_uris, "any"))
-      query_type = nil
-    else
-      query_type = type_uris.first
+    conditions = [date_range_condition(startDateFrom, startDateTo)]
+    conditions += uri_filters.filter_map do |property_id, values, match_quantifier|
+      uris = Array(values).compact
+      add_condition(property_id, uris, match_quantifier) if uris.any?
     end
 
     payload = {
       queries: [
         {
           limit: limit,
-          type: query_type,
-          conditions: conditions
+          type: EVENT_TYPE_URI,
+          conditions: conditions.compact
         }.compact
       ]
     }
@@ -268,6 +243,13 @@ class ArtsdataClient
   end
 
   private
+
+  def date_range_condition(start_date_from, start_date_to)
+    return nil if start_date_from.blank? && start_date_to.blank?
+
+    add_condition(START_DATE_PROPERTY_ID, "#{start_date_from}/#{start_date_to}", nil,
+                  MATCH_QUALIFIER_DATE_RANGE_URI)
+  end
 
   def add_condition(property_id, property_value, match_quantifier, match_qualifier = nil)
     {

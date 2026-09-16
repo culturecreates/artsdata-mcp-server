@@ -16,34 +16,38 @@
     "places": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of SPECIFIC VENUES — a theatre, hall, club, museum, or a room or stage within one. Either a list of venue labels (e.g. \"Minotaure\") or a list of Artsdata URIs (e.g. \"http://kg.artsdata.ca/resource/K5-69\"); labels and URIs cannot be mixed in the same call, and a mixed list returns no results. Do NOT pass a city, province, region or country name (e.g. \"Toronto\", \"Québec\", \"Canada\"): municipalities are not part of the Artsdata place hierarchy, so such a value always returns zero results — it is not a sign that no events exist. To find events in a city, either resolve venues in that city with search_entities and pass those, or use sparql_query filtering on schema:location/schema:address/schema:addressLocality. Prefer URIs over labels: a URI also matches events at venues contained within that place (halls, stages, rooms), which a label does not; resolve a venue name to its URI with search_entities (types: [\"Place\"]). Labels are matched exactly and are case- and accent-sensitive. Can be empty."
+      "description": "Optional list of SPECIFIC VENUE Artsdata URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-69\"]) for a theatre, hall, auditorium, room, or stage. Resolve venue or geographic place names (e.g., 'Toronto', 'Canada') to a URI using search_entities (types: ['Place']) or sparql_query filtering. Place URIs automatically include events at sub-venues contained within them. Can be left empty."
     },
     "artists": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of artists; either a list of artist labels (e.g. \"Jane Watson\") or a list of Artsdata URIs (e.g. \"http://kg.artsdata.ca/resource/K2-6574\"); labels and URIs cannot be mixed in the same call, and a mixed list returns no results. Resolve a name to its URI with search_entities (types: [\"Person\"]). Can be empty."
+      "description": "Optional list of Artsdata artist URIs (e.g., [\"http://kg.artsdata.ca/resource/K2-6574\"]). If you only have a name, use search_entities (types: ['Person']) to find its URI first. Can be left empty."
     },
     "organizations": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of organizations. Either a list of organization labels (e.g. \"Place Bell\") or a list of Artsdata URIs (e.g. \"http://kg.artsdata.ca/resource/K5-72\"); labels and URIs cannot be mixed in the same call, and a mixed list returns no results. Resolve a name to its URI with search_entities (types: [\"Organization\"]). Can be empty."
+      "description": "Optional list of Artsdata organization URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-72\"]). If you only have a name, use search_entities (types: ['Organization']) to find its URI first. Can be left empty."
     },
-    "types": {
+    "has_event_type_concept": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of event type URIs, e.g. \"http://schema.org/Event\", \"http://schema.org/MusicEvent\". Can be empty."
+      "description": "Optional list of Artsdata event type concept URIs (e.g., [\"http://kg.artsdata.ca/resource/ClassicalMusicPerformance\"]), matched on ado:hasEventTypeConcept. These belong to the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes like http://schema.org/MusicEvent. List available concepts using sparql_query: ?concept skos:inScheme <http://kg.artsdata.ca/resource/ArtsdataEventTypes> . Can be left empty."
     },
     "language": {
       "type": "string",
