@@ -204,13 +204,6 @@ class ArtsdataClient
     format_get_entity_results(body.fetch("rows", []))
   end
   def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:, types:, language:, limit:)
-    types_array = Array(types).compact
-    type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
-
-    agents = Array(artists).compact.union(Array(organizations).compact)
-    agent_uris, agent_labels = agents.partition { |agent| agent.to_s.start_with?("http") }
-
-    place_uris, place_labels = places.partition { |place| place.to_s.start_with?("http") }
 
     conditions = []
 
@@ -221,31 +214,14 @@ class ArtsdataClient
     end
 
     # Place conditions
-    if place_uris.size > 0
-      conditions.push(add_condition(LOCATION_PROPERTY_ID, place_uris, "any"))
-    end
-
-    if place_labels.size > 0
-      conditions.push(add_condition(LOCATION_NAME_PROPERTY_ID, place_labels, "any"))
+    if places.size > 0
+      conditions.push(add_condition(LOCATION_PROPERTY_ID, places, "any"))
     end
 
     # Agent conditions
-    if agent_labels.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_NAME_PROPERTY_ID, agent_labels, "any"))
-    end
-
-    if agent_uris.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agent_uris, "any"))
-    end
-
-    # Type conditions
-    if type_uris.size == 0
-      query_type = "#{SCHEMA_BASE_URL}Event"
-    elsif type_uris.size > 1
-      conditions.push(add_condition(RDF_TYPE_PROPERTY_ID, type_uris, "any"))
-      query_type = nil
-    else
-      query_type = type_uris.first
+    agents = Array(artists).compact.union(Array(organizations).compact)
+    if agents.size > 0
+      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agents, "any"))
     end
 
     payload = {
