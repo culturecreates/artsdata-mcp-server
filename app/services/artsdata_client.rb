@@ -12,7 +12,11 @@ class ArtsdataClient
   LOCATION_PROPERTY_ID = 'schema:location'.freeze
 
   ORGANIZER_OR_PERFORMER_PROPERTY_ID = 'schema:organizer|schema:performer'.freeze
+  HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID = 'http://kg.artsdata.ca/ontology/hasEventTypeConcept'.freeze
 
+  EVENT_TYPE_URI = "#{SCHEMA_BASE_URL}Event".freeze
+
+  MATCH_QUANTIFIER_ANY = 'any'.freeze
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
 
   attr_reader :reconciliation_endpoint
@@ -201,33 +205,30 @@ class ArtsdataClient
     body = execute_reconciliation_query(payload, route: 'extend')
     format_get_entity_results(body.fetch("rows", []))
   end
-  def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:, types:, language:, limit:)
 
-    conditions = []
 
-    # startDate condition
-    if startDateFrom.present? || startDateTo.present?
-      property_value = "#{startDateFrom}/#{startDateTo}" if startDateFrom.present? || startDateTo.present?
-      conditions.push(add_condition(START_DATE_PROPERTY_ID, property_value, nil, MATCH_QUALIFIER_DATE_RANGE_URI))
-    end
+  def search_events(startDateFrom:, startDateTo:, places:, artists:, organizations:,
+                    has_event_type_concept:, language:, limit:)
 
-    # Place conditions
-    if places.size > 0
-      conditions.push(add_condition(LOCATION_PROPERTY_ID, places, "any"))
-    end
+    uri_filters = [
+      [LOCATION_PROPERTY_ID, places, MATCH_QUANTIFIER_ANY],
+      [ORGANIZER_OR_PERFORMER_PROPERTY_ID, Array(artists).compact | Array(organizations).compact,
+       MATCH_QUANTIFIER_ANY],
+      [HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID, has_event_type_concept, nil]
+    ]
 
-    # Agent conditions
-    agents = Array(artists).compact.union(Array(organizations).compact)
-    if agents.size > 0
-      conditions.push(add_condition(ORGANIZER_OR_PERFORMER_PROPERTY_ID, agents, "any"))
+    conditions = [date_range_condition(startDateFrom, startDateTo)]
+    conditions += uri_filters.filter_map do |property_id, values, match_quantifier|
+      uris = Array(values).compact
+      add_condition(property_id, uris, match_quantifier) if uris.any?
     end
 
     payload = {
       queries: [
         {
           limit: limit,
-          type: "#{SCHEMA_BASE_URL}Event",
-          conditions: conditions
+          type: EVENT_TYPE_URI,
+          conditions: conditions.compact
         }.compact
       ]
     }
