@@ -29,8 +29,7 @@ class ArtsdataClient
 
   def search_items(query:, types:, lang:, limit:)
 
-    types_array = Array(types).compact
-    type_uris = types_array.map { |t| t.start_with?("http") ? t : "#{SCHEMA_BASE_URL}#{t}" }
+    type_uris = Array(types).compact
 
     conditions = [
       {

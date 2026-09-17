@@ -15,9 +15,12 @@
       "items": {
         "type": "string",
         "enum": [
-          "Place",
-          "Person",
-          "Organization"
+          "http://schema.org/Event",
+          "http://schema.org/Place",
+          "http://schema.org/Person",
+          "http://schema.org/Organization",
+          "http://dbpedia.org/ontology/Agent",
+          "http://www.w3.org/2004/02/skos/core#Concept"
         ]
       },
       "uniqueItems": true,
