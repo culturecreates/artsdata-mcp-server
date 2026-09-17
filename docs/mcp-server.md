@@ -102,7 +102,7 @@ type.
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `query` | string | Yes | Non-empty search query. |
-| `types` | array of `Place \| Person \| Organization` | No | Filter results by entity type. |
+| `types` | array of type URIs | No | Filter results by entity type. One or more of `http://schema.org/Event`, `http://schema.org/Place`, `http://schema.org/Person`, `http://schema.org/Organization`, `http://dbpedia.org/ontology/Agent`, `http://www.w3.org/2004/02/skos/core#Concept`. |
 | `language` | `en` \| `fr` | No (default `en`) | Language for matching/labels. |
 | `limit` | integer (1–50) | No (default 25) | Max number of results. |
 
