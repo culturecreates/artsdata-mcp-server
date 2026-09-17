@@ -287,6 +287,38 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                     }
   end
 
+  test "search_items narrows the search to a concept scheme with a skos:inScheme condition" do
+    captured = {}
+    scheme = "http://kg.artsdata.ca/resource/ArtsdataEventTypes"
+    search_items_with_stubbed_reconciliation(
+      match_response: { "results" => [] }, captured: captured,
+      query: "exhibition", types: ["http://www.w3.org/2004/02/skos/core#Concept"],
+      in_scheme: [scheme], lang: "en", limit: 25
+    )
+
+    conditions = captured[:payload][:queries].first[:conditions]
+
+    assert_includes conditions,
+                    {
+                      matchType: "property",
+                      propertyId: ArtsdataClient::IN_SCHEME_PROPERTY_ID,
+                      propertyValue: [scheme],
+                      required: true
+                    }
+    assert_equal "http://www.w3.org/2004/02/skos/core#inScheme", ArtsdataClient::IN_SCHEME_PROPERTY_ID
+  end
+
+  test "search_items adds no scheme condition when in_scheme is empty" do
+    captured = {}
+    search_items_with_stubbed_reconciliation(
+      match_response: { "results" => [] }, captured: captured,
+      query: "festival", types: [], in_scheme: [], lang: "en", limit: 25
+    )
+
+    assert_equal ["name"], captured[:payload][:queries].first[:conditions].map { |c| c[:matchType] },
+                 "an empty in_scheme list should not add a condition"
+  end
+
   test "search_items returns an empty array when the match response has no candidates" do
     assert_equal [], search_items_with_stubbed_reconciliation(
       match_response: { "results" => [{ "candidates" => [] }] },
@@ -361,7 +393,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     end
 
     client.stub(:execute_reconciliation_query, record_and_respond) do
-      client.search_items(**params)
+      client.search_items(**{ in_scheme: [] }.merge(params))
     end
   end
 end
