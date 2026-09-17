@@ -174,11 +174,11 @@ class SearchEventsTest < ActiveSupport::TestCase
       **FULL_PARAMS
     )
 
-    expanded = captured[:extend_payload][:properties]
-      .select { |property| property[:expand] }
-      .map { |property| property[:id] }
+    expanded = captured[:extend_payload][:properties].filter_map do |property|
+      property[:id] if property.dig(:settings, :content) == "expand"
+    end
     assert_equal %w[location performer organizer].sort, expanded.sort,
-                 "performer, organizer and location must be requested with expand: true"
+                 "performer, organizer and location must be requested with settings: { content: 'expand' }"
 
     event = JSON.parse(response.content.first[:text]).fetch("results").first
 

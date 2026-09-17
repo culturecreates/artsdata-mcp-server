@@ -119,17 +119,17 @@ class GetEntityTest < ActiveSupport::TestCase
                  "response schema validation errors: #{errors.map { |e| e['error'] }.join('; ')}"
   end
 
- test "call resolves performer and location to id, uri and name, and tolerates a missing name" do
+  test "call resolves performer, organizer and location to id, uri and name, and tolerates a missing name" do
     captured = {}
     response = call_get_entity_with_stubbed_reconciliation(
       extend_response: EXTEND_RESPONSE, captured: captured
     )
 
-    expanded = captured[:payload][:properties]
-      .select { |property| property[:expand] }
-      .map { |property| property[:id] }
+    expanded = captured[:payload][:properties].filter_map do |property|
+      property[:id] if property.dig(:settings, :content) == "expand"
+    end
     assert_equal %w[location performer organizer].sort, expanded.sort,
-                 "performer, organizer and location must be requested with expand: true"
+                 "performer, organizer and location must be requested with settings: { content: 'expand' }"
 
     wire_response = JSON.parse(response.content.first[:text])
 

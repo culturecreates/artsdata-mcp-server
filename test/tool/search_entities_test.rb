@@ -10,7 +10,8 @@ class SearchEntitiesTest < ActiveSupport::TestCase
 
   FULL_PARAMS = {
     query: "festival",
-    types: ["Organization", "Place"],
+    types: ["http://schema.org/Organization", "http://schema.org/Place"],
+    in_scheme: [],
     language: "fr",
     limit: 10
   }.freeze
@@ -21,6 +22,7 @@ class SearchEntitiesTest < ActiveSupport::TestCase
     # Query is requiredQuery is required
     query: "festival",
     types: [],
+    in_scheme: [],
     lang: "en",
     limit: 50
   }.freeze
@@ -46,7 +48,7 @@ class SearchEntitiesTest < ActiveSupport::TestCase
 
     valid_payload = {
       "query" => "festival",
-      "types" => ["Organization", "Place"],
+      "types" => ["http://schema.org/Organization", "http://schema.org/Place"],
       "language" => "fr",
       "limit" => 10
     }
@@ -57,6 +59,20 @@ class SearchEntitiesTest < ActiveSupport::TestCase
                  "query alone should satisfy the schema, since every other property is optional"
     assert_empty schema.validate(valid_payload.merge("types" => [])).to_a,
                  "an empty types array is explicitly allowed"
+    every_type = [
+      "http://schema.org/Event",
+      "http://schema.org/Place",
+      "http://schema.org/Person",
+      "http://schema.org/Organization",
+      "http://dbpedia.org/ontology/Agent",
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ]
+    assert_empty schema.validate(valid_payload.merge("types" => every_type)).to_a,
+                 "every searchable type URI should validate"
+    assert_empty schema.validate(valid_payload.merge("in_scheme" => ["http://kg.artsdata.ca/resource/ArtsdataEventTypes"])).to_a,
+                 "a concept scheme URI should validate"
+    assert_empty schema.validate(valid_payload.merge("in_scheme" => [])).to_a,
+                 "an empty in_scheme array is explicitly allowed"
     assert_empty schema.validate(valid_payload.merge("limit" => 1)).to_a,
                  "limit at the schema minimum (1) should validate"
     assert_empty schema.validate(valid_payload.merge("limit" => 50)).to_a,
@@ -65,7 +81,9 @@ class SearchEntitiesTest < ActiveSupport::TestCase
 
   test "request schema rejects invalid payloads" do
     schema = JSONSchemer.schema(REQUEST_SCHEMA_PATH)
-    valid_payload = { "query" => "festival", "types" => ["Person"], "language" => "en", "limit" => 5 }
+    valid_payload = {
+      "query" => "festival", "types" => ["http://schema.org/Person"], "language" => "en", "limit" => 5
+    }
 
     refute_empty schema.validate({}).to_a,
                  "query is required, so an empty payload should fail validation"
@@ -73,11 +91,13 @@ class SearchEntitiesTest < ActiveSupport::TestCase
                  "query has minLength 1, so an empty string should fail validation"
     refute_empty schema.validate(valid_payload.merge("query" => 123)).to_a,
                  "query must be a string"
-    refute_empty schema.validate(valid_payload.merge("types" => ["Event"])).to_a,
-                 "types is restricted to the Place/Person/Organization enum"
-    refute_empty schema.validate(valid_payload.merge("types" => ["Person", "Person"])).to_a,
+    refute_empty schema.validate(valid_payload.merge("types" => ["Organization"])).to_a,
+                 "types takes full type URIs; a bare label is not in the enum"
+    refute_empty schema.validate(valid_payload.merge("types" => ["http://schema.org/CreativeWork"])).to_a,
+                 "a type URI outside the enum should fail validation"
+    refute_empty schema.validate(valid_payload.merge("types" => ["http://schema.org/Person", "http://schema.org/Person"])).to_a,
                  "types has uniqueItems: true, so duplicates should fail validation"
-    refute_empty schema.validate(valid_payload.merge("types" => "Person")).to_a,
+    refute_empty schema.validate(valid_payload.merge("types" => "http://schema.org/Person")).to_a,
                  "types must be an array, not a bare string"
     refute_empty schema.validate(valid_payload.merge("language" => "de")).to_a,
                  "language is restricted to en/fr"
@@ -87,7 +107,9 @@ class SearchEntitiesTest < ActiveSupport::TestCase
                  "limit above the schema maximum (50) should fail validation"
     refute_empty schema.validate(valid_payload.merge("limit" => 2.5)).to_a,
                  "limit must be an integer"
-    refute_empty schema.validate(valid_payload.merge("unknownField" => "x")).to_a,
+    refute_empty schema.validate(valid_payload.merge("in_scheme" => "http://kg.artsdata.ca/resource/ArtsdataEventTypes")).to_a,
+                 "in_scheme must be an array, not a bare string"
+   refute_empty schema.validate(valid_payload.merge("unknownField" => "x")).to_a,
                  "additionalProperties: false should reject unrecognized fields"
   end
 
@@ -140,7 +162,9 @@ class SearchEntitiesTest < ActiveSupport::TestCase
     fixture_results = JSON.parse(File.read(SEARCH_RESULT_FIXTURE_PATH))
     mock_client = Minitest::Mock.new
     mock_client.expect(:search_items, fixture_results, [],
-                       query: "festival", types: ["Organization", "Place"], lang: "fr", limit: 10)
+                       query: "festival",
+                       types: ["http://schema.org/Organization", "http://schema.org/Place"],
+                       in_scheme: [], lang: "fr", limit: 10)
 
     response = ArtsdataClient.stub(:new, mock_client) do
       SearchEntities.call(**FULL_PARAMS)
@@ -206,6 +230,22 @@ class SearchEntitiesTest < ActiveSupport::TestCase
         refute result.key?(stripped), "`#{stripped}` should be stripped from candidate `#{result['id']}`"
       end
     end
+  end
+
+  test "call forwards in_scheme to the reconciliation query as a skos:inScheme condition" do
+    captured = {}
+    call_search_entities_with_stubbed_reconciliation(
+      match_response: MATCH_RESPONSE_WITH_NO_CANDIDATES, captured: captured,
+      query: "exhibition", types: ["http://www.w3.org/2004/02/skos/core#Concept"], in_scheme: ["http://kg.artsdata.ca/resource/ArtsdataEventTypes"]
+    )
+
+    assert_includes captured[:payload][:queries].first[:conditions],
+                    {
+                      matchType: "property",
+                      propertyId: "http://www.w3.org/2004/02/skos/core#inScheme",
+                      propertyValue: ["http://kg.artsdata.ca/resource/ArtsdataEventTypes"],
+                      required: true
+                    }
   end
 
   test "call returns an empty, schema-valid result when the match route has no candidates" do

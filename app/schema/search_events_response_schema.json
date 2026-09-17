@@ -46,6 +46,12 @@
               "$ref": "#/$defs/multiLingualString"
             }
           },
+          "disambiguatingDescription": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/multiLingualString"
+            }
+          },
           "main_entity_of_page": {
             "type": "string",
             "format": "uri",
