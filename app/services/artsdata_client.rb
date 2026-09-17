@@ -7,7 +7,10 @@ class ArtsdataClient
   SCHEMA_BASE_URL = 'http://schema.org/'.freeze
   ARTSDATA_BASE_URL = 'http://kg.artsdata.ca/resource/'.freeze
 
+  SKOS_BASE_URL = 'http://www.w3.org/2004/02/skos/core#'.freeze
+
   RDF_TYPE_PROPERTY_ID = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'.freeze
+  IN_SCHEME_PROPERTY_ID = "#{SKOS_BASE_URL}inScheme".freeze
   START_DATE_PROPERTY_ID = 'http://schema.org/startDate'.freeze
   LOCATION_PROPERTY_ID = 'schema:location'.freeze
 
@@ -27,31 +30,15 @@ class ArtsdataClient
     @reconciliation_endpoint = reconciliation_endpoint
   end
 
-  def search_items(query:, types:, lang:, limit:)
+ def search_items(query:, types:, lang:, limit:, in_scheme:)
 
     type_uris = Array(types).compact
+    scheme_uris = Array(in_scheme).compact
+    query_type = type_uris.first if type_uris.one?
 
-    conditions = [
-      {
-        matchType: "name",
-        propertyValue: query,
-        required: true
-      }
-    ]
-
-    if type_uris.size > 1
-      conditions << {
-        matchType: 'property',
-        propertyId: RDF_TYPE_PROPERTY_ID,
-        propertyValue: type_uris,
-        required: true,
-        matchQuantifier: 'any'
-      }
-
-      query_type = nil
-    else
-      query_type = type_uris.first
-    end
+    conditions = [{ matchType: "name", propertyValue: query, required: true }]
+    conditions << add_condition(RDF_TYPE_PROPERTY_ID, type_uris, MATCH_QUANTIFIER_ANY) if type_uris.size > 1
+    conditions << add_condition(IN_SCHEME_PROPERTY_ID, scheme_uris, nil) if scheme_uris.any?
 
     payload = {
       queries: [
