@@ -113,12 +113,12 @@
       },
       "description": "List of locations, each with its Artsdata id, URI and name."
     },
-    "additional_type": {
+    "has_event_type_concept": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/stringList"
       },
-      "description": "List of additional Type URIs or labels"
+      "description": "List of hasEventTypeConcept URIs or labels"
     },
     "additional_properties": {
       "type": "array",
