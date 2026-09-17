@@ -103,6 +103,7 @@ type.
 |---|---|---|---|
 | `query` | string | Yes | Non-empty search query. |
 | `types` | array of type URIs | No | Filter results by entity type. One or more of `http://schema.org/Event`, `http://schema.org/Place`, `http://schema.org/Person`, `http://schema.org/Organization`, `http://dbpedia.org/ontology/Agent`, `http://www.w3.org/2004/02/skos/core#Concept`. |
+| `in_scheme` | array of URIs | No | Artsdata controlled vocabulary (`skos:ConceptScheme`) URIs, e.g. `http://kg.artsdata.ca/resource/ArtsdataEventTypes`. Restricts results to concepts declared `skos:inScheme` one of them; normally combined with `types: ["http://www.w3.org/2004/02/skos/core#Concept"]`. Use it to find the concept URI behind a label, such as the event type concept that `search_events` takes in `has_event_type_concept`. |
 | `language` | `en` \| `fr` | No (default `en`) | Language for matching/labels. |
 | `limit` | integer (1–50) | No (default 25) | Max number of results. |
 

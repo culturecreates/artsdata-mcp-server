@@ -13,11 +13,12 @@
 
 ### search_entities
 
-Tool to search for entities in the Artsdata knowledge graph by name and type(optional).
+Tool to search for entities in the Artsdata knowledge graph by name, with optional filters on entity type and on the controlled vocabulary (skos:ConceptScheme) a concept belongs to.
 
 Input parameters
 - query (string, required): Non-empty mandatory search query.
 - types (array, optional): Optional list of type filters; can be empty.
+- in_scheme (array, optional): Optional list of Artsdata controlled vocabulary (skos:ConceptScheme) URIs (e.g., ['http://kg.artsdata.ca/resource/ArtsdataEventTypes']). Paired with types: ['http://www.w3.org/2004/02/skos/core#Concept']. Use it to find a concept URI by its label (e.g., the event type for 'exhibition') for use in search_events under has_event_type_concept. Can be left empty.
 - language (string, optional, default en, enum en|fr): Language code, restricted to 'en' or 'fr'.
 - limit (integer, optional, default 25, min 1, max 50): Number of results to return.
 
