@@ -92,8 +92,9 @@ class ArtsdataClient
     end
 
     loc_str_fields = {
-      "alternate_names"           => %w[alternateName],
-      "description"               => %w[description disambiguatingDescription],
+      "alternate_names" => %w[alternateName],
+      "description" => %w[description],
+      "disambiguatingDescription" => %w[disambiguatingDescription]
     }
     single_str_fields = {
       "main_entity_of_page" => %w[url mainEntityOfPage],
@@ -190,15 +191,16 @@ class ArtsdataClient
         { "id": "startDate" },
         { "id": "endDate" },
         { "id": "disambiguatingDescription" },
+        { "id": "description" },
         { "id": "additionalType" },
         { "id": "url" },
         { "id": "sameAs" },
         { "id": "eventStatus" },
         { "id": "eventAttendanceMode" },
-        { "id": "location", "expand": true },
+        { "id": "location", "settings": { "content": "expand" } },
         { "id": "offers" },
-        { "id": "performer", "expand": true },
-        { "id": "organizer", "expand": true }
+        { "id": "performer", "settings": { "content": "expand" } },
+        { "id": "organizer", "settings": { "content": "expand" } }
       ]
     }
 
