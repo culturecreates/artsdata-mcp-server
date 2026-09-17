@@ -62,7 +62,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       :search_items,
       fixture_results,
       [],
-      query: "festival", types: ["Organization"], lang: "en", limit: 2
+      query: "festival", types: ["http://schema.org/Organization"], lang: "en", limit: 2
     )
     mock_client.expect(
       :get_entity_by_extend_service,
@@ -80,7 +80,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
           name: "search_entities",
           arguments: {
             query: "festival",
-            types: ["Organization"],
+            types: ["http://schema.org/Organization"],
             language: "en",
             limit: 2
           }

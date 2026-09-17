@@ -10,7 +10,7 @@ class SearchEntitiesTest < ActiveSupport::TestCase
 
   FULL_PARAMS = {
     query: "festival",
-    types: ["Organization", "Place"],
+    types: ["http://schema.org/Organization", "http://schema.org/Place"],
     language: "fr",
     limit: 10
   }.freeze
@@ -46,7 +46,7 @@ class SearchEntitiesTest < ActiveSupport::TestCase
 
     valid_payload = {
       "query" => "festival",
-      "types" => ["Organization", "Place"],
+      "types" => ["http://schema.org/Organization", "http://schema.org/Place"],
       "language" => "fr",
       "limit" => 10
     }
@@ -57,6 +57,16 @@ class SearchEntitiesTest < ActiveSupport::TestCase
                  "query alone should satisfy the schema, since every other property is optional"
     assert_empty schema.validate(valid_payload.merge("types" => [])).to_a,
                  "an empty types array is explicitly allowed"
+    every_type = [
+      "http://schema.org/Event",
+      "http://schema.org/Place",
+      "http://schema.org/Person",
+      "http://schema.org/Organization",
+      "http://dbpedia.org/ontology/Agent",
+      "http://www.w3.org/2004/02/skos/core#Concept"
+    ]
+    assert_empty schema.validate(valid_payload.merge("types" => every_type)).to_a,
+                 "every searchable type URI should validate"
     assert_empty schema.validate(valid_payload.merge("limit" => 1)).to_a,
                  "limit at the schema minimum (1) should validate"
     assert_empty schema.validate(valid_payload.merge("limit" => 50)).to_a,
@@ -65,7 +75,9 @@ class SearchEntitiesTest < ActiveSupport::TestCase
 
   test "request schema rejects invalid payloads" do
     schema = JSONSchemer.schema(REQUEST_SCHEMA_PATH)
-    valid_payload = { "query" => "festival", "types" => ["Person"], "language" => "en", "limit" => 5 }
+    valid_payload = {
+      "query" => "festival", "types" => ["http://schema.org/Person"], "language" => "en", "limit" => 5
+    }
 
     refute_empty schema.validate({}).to_a,
                  "query is required, so an empty payload should fail validation"
@@ -73,11 +85,13 @@ class SearchEntitiesTest < ActiveSupport::TestCase
                  "query has minLength 1, so an empty string should fail validation"
     refute_empty schema.validate(valid_payload.merge("query" => 123)).to_a,
                  "query must be a string"
-    refute_empty schema.validate(valid_payload.merge("types" => ["Event"])).to_a,
-                 "types is restricted to the Place/Person/Organization enum"
-    refute_empty schema.validate(valid_payload.merge("types" => ["Person", "Person"])).to_a,
+    refute_empty schema.validate(valid_payload.merge("types" => ["Organization"])).to_a,
+                 "types takes full type URIs; a bare label is not in the enum"
+    refute_empty schema.validate(valid_payload.merge("types" => ["http://schema.org/CreativeWork"])).to_a,
+                 "a type URI outside the enum should fail validation"
+    refute_empty schema.validate(valid_payload.merge("types" => ["http://schema.org/Person", "http://schema.org/Person"])).to_a,
                  "types has uniqueItems: true, so duplicates should fail validation"
-    refute_empty schema.validate(valid_payload.merge("types" => "Person")).to_a,
+    refute_empty schema.validate(valid_payload.merge("types" => "http://schema.org/Person")).to_a,
                  "types must be an array, not a bare string"
     refute_empty schema.validate(valid_payload.merge("language" => "de")).to_a,
                  "language is restricted to en/fr"
@@ -140,7 +154,7 @@ class SearchEntitiesTest < ActiveSupport::TestCase
     fixture_results = JSON.parse(File.read(SEARCH_RESULT_FIXTURE_PATH))
     mock_client = Minitest::Mock.new
     mock_client.expect(:search_items, fixture_results, [],
-                       query: "festival", types: ["Organization", "Place"], lang: "fr", limit: 10)
+                       query: "festival", types: ["http://schema.org/Organization", "http://schema.org/Place"], lang: "fr", limit: 10)
 
     response = ArtsdataClient.stub(:new, mock_client) do
       SearchEntities.call(**FULL_PARAMS)

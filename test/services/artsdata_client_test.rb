@@ -254,6 +254,39 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_equal expected, result
   end
 
+ test "search_items sends a single type as the query type, verbatim" do
+    captured = {}
+    search_items_with_stubbed_reconciliation(
+      match_response: { "results" => [] }, captured: captured,
+      query: "festival", types: ["http://dbpedia.org/ontology/Agent"], lang: "en", limit: 25
+    )
+
+    query = captured[:payload][:queries].first
+    assert_equal "http://dbpedia.org/ontology/Agent", query[:type]
+    assert_equal ["name"], query[:conditions].map { |c| c[:matchType] },
+                 "a single type needs no rdf:type condition"
+  end
+
+  test "search_items matches several types with an rdf:type condition and no query type" do
+    captured = {}
+    types = ["http://schema.org/Person", "http://www.w3.org/2004/02/skos/core#Concept"]
+    search_items_with_stubbed_reconciliation(
+      match_response: { "results" => [] }, captured: captured,
+      query: "festival", types: types, lang: "en", limit: 25
+    )
+
+    query = captured[:payload][:queries].first
+    assert_nil query[:type]
+    assert_includes query[:conditions],
+                    {
+                      matchType: "property",
+                      propertyId: ArtsdataClient::RDF_TYPE_PROPERTY_ID,
+                      propertyValue: types,
+                      required: true,
+                      matchQuantifier: "any"
+                    }
+  end
+
   test "search_items returns an empty array when the match response has no candidates" do
     assert_equal [], search_items_with_stubbed_reconciliation(
       match_response: { "results" => [{ "candidates" => [] }] },
