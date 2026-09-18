@@ -4,7 +4,8 @@ class SearchEvents < MCP::Tool
               "has_event_type_concept and language. Places, artists and organizations are Artsdata entity URIs; " \
               "the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary " \
               "(adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with " \
-              "search_entities first."
+              "search_entities first. Places must be venues; for events in a city or region, use sparql_query " \
+              "(see the places parameter)."
 
   request_schema_path = File.expand_path("../schema/search_events_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
