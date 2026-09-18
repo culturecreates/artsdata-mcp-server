@@ -1,7 +1,7 @@
 class SearchEvents < MCP::Tool
 
   description "Tool to search for events in the Artsdata knowledge graph by place, artist, organization, " \
-              "event type concept and language. Places, artists and organizations are Artsdata entity URIs; " \
+              "has_event_type_concept and language. Places, artists and organizations are Artsdata entity URIs; " \
               "the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary " \
               "(adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with " \
               "search_entities first."
