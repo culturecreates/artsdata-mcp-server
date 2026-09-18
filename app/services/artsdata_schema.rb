@@ -59,10 +59,6 @@ class ArtsdataSchema
       end
     end
 
-    def reset_cache!
-      MUTEX.synchronize { @digest = nil }
-    end
-
     def cache_ttl
       Integer(ENV.fetch(CACHE_TTL_ENV, DEFAULT_CACHE_TTL_SECONDS))
     end

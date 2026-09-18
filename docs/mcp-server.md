@@ -363,20 +363,6 @@ Guard rails:
 
 An `ASK` query returns `{ "head": {}, "boolean": true }`.
 
-## REST-style equivalent
-
-A legacy REST/JSON endpoint mirroring `search_entities` is also available on
-the same host, for clients that don't speak MCP:
-
-```text
-GET /search-entities?query=<text>&lang=en|fr
-```
-
-Full OpenAPI documentation is available at:
-
-- Swagger UI: `/api-docs/index.html`
-- OpenAPI spec: `/api-docs/v1/swagger.yaml`
-
 ## See also
 
 - [Model Context Protocol specification](https://modelcontextprotocol.io)

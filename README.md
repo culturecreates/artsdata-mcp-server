@@ -14,10 +14,10 @@ bundle install
 
 ## Endpoints
 
-- `GET /search-entities?query=<text>&lang=en|fr`
-- `GET /entities?id=<uri_or_id>&lang=en|fr`
-
-Both endpoints return JSON in MCP-style payloads with a `tool`, `result`, and `arguments`.
+- `POST /mcp`: MCP Streamable HTTP endpoint (tools and resources are documented in
+  [docs/mcp-server.md](docs/mcp-server.md))
+- `GET /up`: health check
+- `GET /llms.txt`: machine-readable guide for agents
 
 ## MCP resources
 
@@ -42,20 +42,20 @@ Both endpoints return JSON in MCP-style payloads with a `tool`, `result`, and `a
     run-unit-tests.yml    # Reusable workflow running Minitest
     unit-test-on-pull-request.yml # Workflow running unit tests on pull requests
 app/
-  controllers/entities_controller.rb
-  services/artsdata_client.rb
+  resource/     # MCP resources
+  schema/       # JSON schemas of the tools' input and output
+  services/     # Clients for the reconciliation service, SPARQL endpoint and Databus
+  tool/         # MCP tools
 config/
+  initializers/mcp_server.rb  # MCP server: registered tools, resources and transport
   routes.rb
-swagger/v1/
-  swagger.yaml
 test/
-  controllers/entities_controller_test.rb
 ```
 
 ## Configuration
 
-- `ARTSDATA_RECONCILIATION_ENDPOINT`: configurable reconciliation
-  endpoint URL for `/search-entities`.
+- `ARTSDATA_RECONCILIATION_ENDPOINT`: reconciliation service URL used by the
+  `search_entities`, `get_entity` and `search_events` tools.
 - `ARTSDATA_SCHEMA_URL` (optional): Turtle file compiled by the `get_schema` tool
   (default `https://docs.artsdata.ca/artsdata-schema.ttl`).
 - `ARTSDATA_SCHEMA_CACHE_TTL_SECONDS` (optional): how long the compiled schema is cached
@@ -69,8 +69,6 @@ test/
   (default `25`).
 - `ARTSDATA_SPARQL_MAX_ROWS` (optional): maximum rows `sparql_query` returns; extra rows
   are cut and the result is flagged `truncated` (default `1000`).
-- SPARQL query template for `/entities` is currently a placeholder in
-  `app/services/artsdata_client.rb`.
 - Docker instance profiles are provided in:
   - `env/production.env`
   - `env/staging.env`
@@ -108,18 +106,15 @@ docker run --rm -p 3000:3000 -e ARTSDATA_INSTANCE_TYPE=STAGING artsdata-mcp-serv
 Run tests in Docker:
 
 ```bash
-docker run --rm artsdata-mcp-server bundle exec rails test test/controllers/entities_controller_test.rb
+docker run --rm artsdata-mcp-server bundle exec rails test
 ```
-
-## Swagger
-
-- Swagger UI: `GET /api-docs`
-- OpenAPI file: `/api-docs/v1/swagger.yaml`
 
 ## Run tests
 
+Run a single test file:
+
 ```bash
-bundle exec rails test test/controllers/entities_controller_test.rb
+bundle exec rails test test/tool/search_events_test.rb
 ```
 
 Run all tests:
@@ -165,4 +160,5 @@ Every pull request triggers a workflow that unit tests. The workflow is defined 
 The Artsdata MCP Server is actively deployed and hosted in a live production environment.
 
 Live Production Endpoints
-API Documentation (Swagger UI): https://artsdata-mcp-server-8cb4262e2362.herokuapp.com/api-docs/index.html
+- MCP endpoint: https://mcp.artsdata.ca/mcp
+- Agent guide: https://mcp.artsdata.ca/llms.txt
