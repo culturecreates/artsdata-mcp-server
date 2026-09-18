@@ -20,7 +20,7 @@
         "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of SPECIFIC VENUE Artsdata URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-69\"]) for a theatre, hall, auditorium, room, or stage. Resolve venue or geographic place names (e.g., 'Toronto', 'Canada') to a URI using search_entities (types: ['Place']) or sparql_query filtering. Place URIs automatically include events at sub-venues contained within them. Can be left empty."
+      "description": "Optional list of Artsdata VENUE URIs (e.g., [\"http://kg.artsdata.ca/resource/K11-2\"]) for a theatre, hall, auditorium, room or stage. Only venue URIs work: a city, region or country (e.g. 'Toronto', 'Ontario', 'Canada') is not a venue and returns no events. First find the venue's URI with search_entities (types: ['http://schema.org/Place']) using the venue name. A venue URI also covers the rooms and halls inside it (schema:containedInPlace). To find events in a city or region, use sparql_query. Can be left empty."
     },
     "artists": {
       "type": "array",
