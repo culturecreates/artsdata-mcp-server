@@ -93,7 +93,7 @@ class ArtsdataClient
     }
     value_list_fields = {
       "same_as"         => %w[sameAs],
-      "additional_type" => %w[additionalType],
+      "has_event_type_concept" => %w[hasEventTypeConcept],
     }
     entity_ref_fields = %w[performer organizer location]
 
@@ -178,7 +178,7 @@ class ArtsdataClient
         { "id": "endDate" },
         { "id": "disambiguatingDescription" },
         { "id": "description" },
-        { "id": "additionalType" },
+        { "id": "http://kg.artsdata.ca/ontology/hasEventTypeConcept" },
         { "id": "url" },
         { "id": "sameAs" },
         { "id": "eventStatus" },

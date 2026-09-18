@@ -54,7 +54,7 @@ class SearchEventsTest < ActiveSupport::TestCase
           { "id" => "startDate", "values" => [{ "str" => "2026-01-01" }] },
           { "id" => "endDate", "values" => [{ "str" => "2026-01-02" }] },
           { "id" => "disambiguatingDescription", "values" => [{ "str" => "A test event description", "lang" => "en" }] },
-          { "id" => "additionalType", "values" => [{ "id" => "http://schema.org/Festival" }] },
+          { "id" => "hasEventTypeConcept", "values" => [{ "id" => "http://kg.artsdata.ca/resource/TheatrePerformance" }] },
           { "id" => "url", "values" => [{ "str" => "http://example.com/event" }] },
           { "id" => "sameAs", "values" => [{ "id" => "http://wikidata.org/Q1" }] },
           { "id" => "eventStatus", "values" => [{ "id" => "http://schema.org/EventScheduled" }] },
