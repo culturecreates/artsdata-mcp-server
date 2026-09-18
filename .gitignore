@@ -5,12 +5,11 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*
 !/tmp/pids/
 !/tmp/pids/.keep
-!/tmp/storage/
-!/tmp/storage/.keep
-/storage/*
-!/storage/.keep
 /config/master.key
 /vendor/bundle
 
