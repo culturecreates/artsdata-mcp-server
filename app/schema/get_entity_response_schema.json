@@ -118,7 +118,7 @@
       "items": {
         "$ref": "#/$defs/stringList"
       },
-      "description": "List of hasEventTypeConcept URIs or labels"
+      "description": "Concept URIs from the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes)"
     },
     "additional_properties": {
       "type": "array",
