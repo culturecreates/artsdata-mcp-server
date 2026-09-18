@@ -250,24 +250,6 @@ class ArtsdataClient
     }.compact
   end
 
-  def execute_query(query, variables = {})
-    uri = URI.parse(sparql_endpoint)
-    request = Net::HTTP::Post.new(uri)
-    request.set_form_data({ query: query, format: "application/sparql-results+json" }.merge(variables))
-
-    response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
-      http.request(request)
-    end
-
-    return [] unless response.is_a?(Net::HTTPSuccess)
-
-    body = JSON.parse(response.body)
-    body.fetch("results", {}).fetch("bindings", [])
-  rescue StandardError => e
-    Rails.logger.error("ArtsdataClient#execute_query failed: #{e.class}: #{e.message}")
-    []
-  end
-
   def execute_reconciliation_query(payload, lang: "en", route:)
     uri = URI.join(reconciliation_endpoint, route)
     request = Net::HTTP::Post.new(uri)
