@@ -57,6 +57,11 @@ class ArtsdataClient
   def format_get_entity_results(input_data)
     parse_loc_str = ->(vals) { vals.map { |v| { "value" => v["str"] || "" }.tap { |h| h["language"] = v["lang"] if v["lang"] } } }
     extract_val   = ->(vals) { vals.filter_map { |v| v["str"] || v["id"] } }
+    # The extend service trims the Artsdata namespace from hasEventTypeConcept values
+    # (e.g. "MusicPerformance"); the MCP server returns them as full concept URIs.
+    to_concept_uris = lambda do |vals|
+      extract_val.call(vals).reject(&:blank?).map { |id| id.start_with?("http") ? id : "#{ARTSDATA_BASE_URL}#{id}" }
+    end
 
     ref_name      = lambda do |value|
       name_prop = (value["properties"] || []).find { |p| p["id"] == "name" }
@@ -93,13 +98,12 @@ class ArtsdataClient
     }
     value_list_fields = {
       "same_as"         => %w[sameAs],
-      "has_event_type_concept" => %w[hasEventTypeConcept],
     }
     entity_ref_fields = %w[performer organizer location]
 
     known_keys = %w[name type] + loc_str_fields.values.flatten +
                  single_str_fields.values.flatten + single_id_fields.values.flatten +
-                 value_list_fields.values.flatten + entity_ref_fields
+                 value_list_fields.values.flatten + %w[hasEventTypeConcept] + entity_ref_fields
 
     input_data.map do |entity|
       props = (entity["properties"] || []).group_by { |p| p["id"] }
@@ -149,6 +153,9 @@ class ArtsdataClient
         vals = values_for.call(ids)
         result[key] = extract_val.call(vals) if vals
       end
+
+      concept_vals = values_for.call(%w[hasEventTypeConcept])
+      result["has_event_type_concept"] = to_concept_uris.call(concept_vals) if concept_vals
 
       entity_ref_fields.each do |key|
         vals = values_for.call([key])

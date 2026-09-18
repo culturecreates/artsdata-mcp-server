@@ -227,6 +227,35 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     assert_equal [], ArtsdataClient.new.format_get_entity_results([])
   end
 
+  test "format_get_entity_results prefixes only has_event_type_concept values, not other properties" do
+    rows = [
+      {
+        "id" => "K1-1",
+        "properties" => [
+          { "id" => "hasEventTypeConcept",
+            "values" => [{ "id" => "MusicPerformance" },
+                         { "str" => "Event" },
+                         { "id" => "http://kg.artsdata.ca/resource/TheatrePerformance" }] },
+          { "id" => "sameAs", "values" => [{ "id" => "Q123" }] },
+          { "id" => "eventStatus", "values" => [{ "id" => "EventScheduled" }] },
+          { "id" => "offers", "values" => [{ "id" => "offer-1" }] }
+        ]
+      }
+    ]
+
+    result = ArtsdataClient.new.format_get_entity_results(rows).first
+
+    assert_equal [
+      "http://kg.artsdata.ca/resource/MusicPerformance",
+      "http://kg.artsdata.ca/resource/Event",
+      "http://kg.artsdata.ca/resource/TheatrePerformance"
+    ], result["has_event_type_concept"]
+
+    assert_equal ["Q123"], result["same_as"]
+    assert_equal "EventScheduled", result["event_status"]
+    assert_equal ["offer-1"], result.dig("additional_properties", 0, "values")
+  end
+
   test "search_items formats match candidates into search results" do
 
     SEARCH_MATCH_RESPONSE = JSON.parse(File.read(RECON_MATCH_FIXTURE_PATH))
