@@ -47,7 +47,7 @@
         "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of Artsdata event type concept URIs (e.g., [\"http://kg.artsdata.ca/resource/ClassicalMusicPerformance\"]), matched on ado:hasEventTypeConcept. These belong to the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes like http://schema.org/MusicEvent. List available concepts using sparql_query: ?concept skos:inScheme <http://kg.artsdata.ca/resource/ArtsdataEventTypes> . Can be left empty."
+      "description": "Optional list of concept URIs from the Artsdata Event Types vocabulary (http://kg.artsdata.ca/resource/ArtsdataEventTypes). Must be valid concept URIs (e.g., http://kg.artsdata.ca/resource/ClassicalMusicPerformance). Non-matching inputs—such as text labels, schema.org classes, or external vocabularies—will return zero results without throwing an error. Resolve any name or label to its URI with search_entities first"
     },
     "language": {
       "type": "string",
