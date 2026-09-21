@@ -19,6 +19,8 @@ bundle install
 - `GET /up`: health check
 - `GET /llms.txt`: machine-readable guide for agents
 
+Calls to `/mcp` are reported to Google Analytics 4.
+
 ## MCP resources
 
 - `artsdata://dumps/core-minus-provenance/latest` (`artsdata_dump`): manifest for the
@@ -48,7 +50,10 @@ app/
   tool/         # MCP tools
 config/
   initializers/mcp_server.rb  # MCP server: registered tools, resources and transport
+  initializers/mcp_analytics.rb # Google Analytics 4 reporting configuration
   routes.rb
+lib/
+  mcp_analytics/  # Rack middleware reporting MCP usage to Google Analytics 4
 test/
 ```
 
@@ -74,6 +79,23 @@ test/
   - `env/staging.env`
 - `ARTSDATA_INSTANCE_TYPE` (optional): `PRODUCTION` (default) or `STAGING`.
   The Docker entrypoint loads the matching file from `env/`.
+
+### Usage analytics
+
+Calls to `/mcp` are reported to Google Analytics 4, including the tool used,
+how long the call took, and the caller's `User-Agent`. Reporting stays off until
+both variables below are set, so development and CI need no configuration.
+
+- `GA4_MEASUREMENT_ID`: the GA4 property's `G-XXXXXXXXXX` id. Not a secret;
+  defaulted for production in `config/environments/production.rb`.
+- `GA4_API_SECRET`: Measurement Protocol secret. **Secret — set it as a Heroku.
+  config var, never in `env/*.env`, which is committed.**
+- `GA4_DEBUG` (optional): tag events so they appear in GA4's DebugView within
+  seconds, and log whether GA4 considers each payload valid. Events are still
+  recorded. Useful because the normal endpoint answers `204` whether or not the
+  payload is valid.
+
+Reporting is on when both credentials are present and off otherwise.
 
 ## Run the application
 
