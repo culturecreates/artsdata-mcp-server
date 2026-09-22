@@ -6,7 +6,7 @@ module McpAnalytics
 
   class McpRequest
     Call = Struct.new(:method_name, :tool_name, :resource_uri, :prompt_name,
-                      keyword_init: true)
+                      :arguments, keyword_init: true)
 
     attr_reader :calls, :client_name, :client_version, :protocol_version
 
@@ -47,9 +47,11 @@ module McpAnalytics
 
       Call.new(
         method_name: method_name,
-        tool_name: (params["name"].to_s if method_name == "tools/call"),
-        resource_uri: (params["uri"].to_s if method_name.start_with?("resources/")),
-        prompt_name: (params["name"].to_s if method_name == "prompts/get")
+        tool_name: (presence(params["name"]) if method_name == "tools/call"),
+        resource_uri: (presence(params["uri"]) if method_name.start_with?("resources/")),
+        prompt_name: (presence(params["name"]) if method_name == "prompts/get"),
+        arguments: (params["arguments"] if method_name == "tools/call" &&
+                                           params["arguments"].is_a?(Hash))
       )
     end
 

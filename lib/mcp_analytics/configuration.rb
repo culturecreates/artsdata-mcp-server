@@ -26,18 +26,44 @@ module McpAnalytics
     MAX_BODY_BYTES = 256 * 1024
 
     attr_reader :measurement_id, :api_secret
-    attr_accessor :logger
+    attr_accessor :logger, :request_log_io
 
     def initialize(env = ENV)
       @measurement_id = presence(env["GA4_MEASUREMENT_ID"])
       @api_secret     = presence(env["GA4_API_SECRET"])
       @debug          = truthy?(env["GA4_DEBUG"])
+
+      # The request log is independent of Google Analytics: it is the record of
+      # what agents asked for, and it must keep working when GA4 credentials
+      # are absent. On by default; set MCP_REQUEST_LOG=false to silence it.
+      @request_log    = presence(env["MCP_REQUEST_LOG"])
+
       @logger         = nil
+      @request_log_io = $stdout
+    end
+
+    attr_writer :request_log
+
+    def request_log?
+      @request_log.nil? || truthy?(@request_log)
+    end
+
+    attr_writer :reporting_disabled
+
+    def reporting_disabled?
+      @reporting_disabled == true
+    end
+
+    # Whether the middleware needs to do any work at all.
+    def active?
+      enabled? || request_log?
     end
 
     # Reporting is on as soon as both credentials are present, and off
     # otherwise. Unset either one to switch it off.
     def enabled?
+      return false if reporting_disabled?
+
       !measurement_id.nil? && !api_secret.nil?
     end
 

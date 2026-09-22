@@ -97,6 +97,14 @@ both variables below are set, so development and CI need no configuration.
 
 Reporting is on when both credentials are present and off otherwise.
 
+Separately, every MCP call is written to stdout as one JSON line, including the
+complete arguments the agent sent — the full SPARQL query, search terms, entity
+URIs. On Heroku these lines
+go to `heroku logs` and to any drain you attach.
+
+- `MCP_REQUEST_LOG` (optional): set to `false` to silence the request log. It
+  runs independently of Google Analytics and works with no GA4 credentials set.
+
 ## Run the application
 
 ```bash
