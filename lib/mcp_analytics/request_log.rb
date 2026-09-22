@@ -24,6 +24,8 @@ module McpAnalytics
         resource_uri: call&.resource_uri,
         prompt_name: call&.prompt_name,
         arguments: arguments_for(call),
+        sparql_form: call&.sparql_form,
+        sparql_where: call&.sparql_where,
         status: context[:outcome],
         http_status: context[:http_status],
         duration_ms: context[:duration_ms],

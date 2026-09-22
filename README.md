@@ -105,6 +105,12 @@ go to `heroku logs` and to any drain you attach.
 - `MCP_REQUEST_LOG` (optional): set to `false` to silence the request log. It
   runs independently of Google Analytics and works with no GA4 credentials set.
 
+For `sparql_query` calls, two extra facts are reported: `sparql_form`
+(`SELECT`, `ASK` or `UNKNOWN`) and `sparql_where`, the
+WHERE clause as the agent wrote it with the PREFIX block removed and whitespace
+collapsed. Both go to Google Analytics and to the request log; GA4 cuts the
+WHERE clause at its 100-character limit, the log keeps it whole.
+
 ## Run the application
 
 ```bash
