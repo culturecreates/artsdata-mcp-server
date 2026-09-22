@@ -5,6 +5,7 @@ require_relative "identity"
 require_relative "mcp_request"
 require_relative "event"
 require_relative "ga4_client"
+require_relative "request_log"
 
 module McpAnalytics
 
@@ -24,16 +25,12 @@ module McpAnalytics
 
     def call(env)
       log_status_once
-      return @app.call(env) unless tracked_path?(env) && config.enabled?
+      return @app.call(env) unless tracked_path?(env) && config.active?
 
-      trace("tracking #{env['REQUEST_METHOD']} #{env['PATH_INFO']}")
       raw_body = buffer_request_body(env)
-      trace("buffered #{raw_body ? "#{raw_body.bytesize} bytes" : 'nothing'}")
       started_at = monotonic_now
-
       begin
         status, headers, body = @app.call(env)
-        trace("app responded #{status}")
       rescue StandardError => e
         track(env, raw_body, elapsed_ms(started_at), status: 500, outcome: "exception")
         raise e
@@ -57,12 +54,18 @@ module McpAnalytics
         config.logger&.info(
           "[mcp_analytics] reporting MCP calls to #{config.measurement_id}#{mode}"
         )
+      elsif config.reporting_disabled?
+        config.logger&.info("[mcp_analytics] reporting OFF -- disabled for this environment")
       else
         missing = []
         missing << "GA4_MEASUREMENT_ID" if config.measurement_id.nil?
         missing << "GA4_API_SECRET" if config.api_secret.nil?
         config.logger&.info("[mcp_analytics] reporting OFF -- no #{missing.join(' and no ')}")
       end
+
+      config.logger&.info(
+        "[mcp_analytics] request log #{config.request_log? ? 'ON (stdout)' : 'OFF'}"
+      )
     rescue StandardError
       @status_logged = true
     end
@@ -105,9 +108,28 @@ module McpAnalytics
     end
 
     def track(env, raw_body, duration_ms, status:, outcome:)
-      return unless config.enabled?
+      return unless config.active?
 
       mcp_request = McpRequest.new(raw_body)
+      context = shared_context(env, mcp_request, outcome, status, duration_ms)
+      calls = calls_for(mcp_request, env["REQUEST_METHOD"].to_s.upcase)
+
+      write_request_log(env, calls, context) if config.request_log?
+      report_to_ga4(env, calls, context) if config.enabled?
+    rescue StandardError => e
+      warn_failure("failed to record request", e)
+      nil
+    end
+
+    def write_request_log(env, calls, context)
+      calls.each do |call|
+        request_log.write(call: call, request_id: env["action_dispatch.request_id"], **context)
+      end
+    end
+
+    def report_to_ga4(env, calls, context)
+      events = calls.map { |call| event_for(call, context) }
+      return if events.empty?
 
       seed = Identity.seed(
         session_id: env["HTTP_MCP_SESSION_ID"],
@@ -115,49 +137,40 @@ module McpAnalytics
         ip: client_ip(env)
       )
 
-      events = build_events(env, mcp_request, outcome, status, duration_ms)
-      return if events.empty?
-
       client.send_events(
         client_id: Identity.client_id(seed),
         session_id: Identity.session_id(seed),
         events: events
       )
-    rescue StandardError => e
-      warn_failure("failed to record request", e)
-      nil
     end
 
-    def build_events(env, mcp_request, outcome, status, duration_ms)
-      protocol_version = mcp_request.protocol_version || env["HTTP_MCP_PROTOCOL_VERSION"]
-      transport = env["REQUEST_METHOD"].to_s.upcase
+    def request_log
+      @request_log ||= RequestLog.new(io: config.request_log_io, logger: config.logger)
+    end
 
-      shared = {
+    def shared_context(env, mcp_request, outcome, status, duration_ms)
+      {
         outcome: outcome,
         http_status: status.to_i,
         duration_ms: duration_ms,
-        transport: transport,
         user_agent: env["HTTP_USER_AGENT"],
         client_name: mcp_request.client_name,
         client_version: mcp_request.client_version,
-        protocol_version: protocol_version,
-        server_version: server_version
+        protocol_version: mcp_request.protocol_version || env["HTTP_MCP_PROTOCOL_VERSION"]
       }
-
-      calls = mcp_request.calls
-      # A GET (SSE stream) or DELETE (session teardown) carries no JSON-RPC
-      # body but is still a call to the server, so it gets an event too.
-      if calls.empty?
-        calls = [McpRequest::Call.new(method_name: "transport/#{transport.downcase}")]
-      end
-
-      calls.map { |call| event_for(call, shared) }
     end
 
-    def event_for(call, shared)
+    def calls_for(mcp_request, transport)
+      calls = mcp_request.calls
+      return calls unless calls.empty?
+
+      [McpRequest::Call.new(method_name: "transport/#{transport.downcase}")]
+    end
+
+    def event_for(call, context)
       {
         name: Event.name_for(call.method_name),
-        params: Event.params_for(call: call, **shared)
+        params: Event.params_for(call: call, **context)
       }
     end
 
@@ -199,15 +212,6 @@ module McpAnalytics
     def client_ip(env)
       forwarded = env["HTTP_X_FORWARDED_FOR"].to_s.split(",").first
       (forwarded || env["REMOTE_ADDR"]).to_s.strip
-    end
-
-    def server_version
-      return nil unless defined?(ArtsdataMCPServer)
-      return nil unless ArtsdataMCPServer.respond_to?(:version)
-
-      ArtsdataMCPServer.version
-    rescue StandardError
-      nil
     end
 
     def client

@@ -2,11 +2,13 @@
 
 require "json"
 
+require_relative "sparql"
+
 module McpAnalytics
 
   class McpRequest
     Call = Struct.new(:method_name, :tool_name, :resource_uri, :prompt_name,
-                      keyword_init: true)
+                      :arguments, :sparql_form, :sparql_where, keyword_init: true)
 
     attr_reader :calls, :client_name, :client_version, :protocol_version
 
@@ -44,12 +46,19 @@ module McpAnalytics
       return nil if method_name.empty?
 
       params = entry["params"].is_a?(Hash) ? entry["params"] : {}
+      tool_name = (presence(params["name"]) if method_name == "tools/call")
+      arguments = (params["arguments"] if method_name == "tools/call" &&
+                                          params["arguments"].is_a?(Hash))
+      query = (presence(arguments["query"]) if tool_name == "sparql_query" && arguments)
 
       Call.new(
         method_name: method_name,
-        tool_name: (params["name"].to_s if method_name == "tools/call"),
-        resource_uri: (params["uri"].to_s if method_name.start_with?("resources/")),
-        prompt_name: (params["name"].to_s if method_name == "prompts/get")
+        tool_name: tool_name,
+        resource_uri: (presence(params["uri"]) if method_name.start_with?("resources/")),
+        prompt_name: (presence(params["name"]) if method_name == "prompts/get"),
+        arguments: arguments,
+        sparql_form: (Sparql.form(query) if query),
+        sparql_where: (Sparql.where_clause(query) if query)
       )
     end
 
