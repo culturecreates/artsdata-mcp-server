@@ -31,8 +31,16 @@ class McpAnalytics::MiddlewareTest < ActiveSupport::TestCase
     "GA4_API_SECRET" => "secret"
   }.freeze
 
-  def config(overrides = {})
-    McpAnalytics::Configuration.new(ENABLED_ENV.merge(overrides))
+ def config(overrides = {})
+    built = McpAnalytics::Configuration.new(ENABLED_ENV.merge(overrides))
+    built.request_log = false
+    built
+  end
+
+  def silent_config(env)
+    built = McpAnalytics::Configuration.new(env)
+    built.request_log = false
+    built
   end
 
   def env_for(body, overrides = {})
@@ -106,7 +114,7 @@ class McpAnalytics::MiddlewareTest < ActiveSupport::TestCase
     end
 
     McpAnalytics::Middleware
-      .new(app, config: McpAnalytics::Configuration.new({}), client: client)
+      .new(app, config: silent_config({}), client: client)
       .call(env_for(body))
 
     assert_equal body, seen
@@ -239,7 +247,7 @@ class McpAnalytics::MiddlewareTest < ActiveSupport::TestCase
     event = client.payloads.sole[:events].sole
     assert_equal "mcp_request", event[:name]
     assert_equal "transport/get", event[:params][:mcp_method]
-    assert_equal "GET", event[:params][:transport]
+    refute event[:params].key?(:transport)
   end
 
   # --- outcome detection ----------------------------------------------------

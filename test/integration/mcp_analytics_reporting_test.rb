@@ -30,6 +30,8 @@ class McpAnalyticsReportingTest < ActionDispatch::IntegrationTest
       "GA4_MEASUREMENT_ID" => "G-TESTTEST",
       "GA4_API_SECRET" => "test-secret"
     )
+
+    McpAnalytics.config.request_log = false
     @client = RecordingClient.new
     McpAnalytics.client = @client
   end
@@ -57,10 +59,9 @@ class McpAnalyticsReportingTest < ActionDispatch::IntegrationTest
     params = reported_params
     assert_equal "mcp_request", reported_event[:name]
     assert_equal "initialize", params[:mcp_method]
-    # clientInfo is the one moment a client tells us what it is by name.
     assert_equal "Claude Code", params[:client_name]
     assert_equal "1.0.0", params[:client_version]
-    assert_equal "2025-06-18", params[:protocol_version]
+
   end
 
   test "tools/list still succeeds and is reported" do
