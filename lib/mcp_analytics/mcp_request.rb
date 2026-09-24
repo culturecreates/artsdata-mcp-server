@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require "json"
 
 require_relative "sparql"
@@ -8,7 +6,7 @@ module McpAnalytics
 
   class McpRequest
     Call = Struct.new(:method_name, :tool_name, :resource_uri, :prompt_name,
-                      :arguments, :sparql_form, :sparql_where, keyword_init: true)
+                      :arguments, :sparql_hash, keyword_init: true)
 
     attr_reader :calls, :client_name, :client_version, :protocol_version
 
@@ -57,8 +55,7 @@ module McpAnalytics
         resource_uri: (presence(params["uri"]) if method_name.start_with?("resources/")),
         prompt_name: (presence(params["name"]) if method_name == "prompts/get"),
         arguments: arguments,
-        sparql_form: (Sparql.form(query) if query),
-        sparql_where: (Sparql.where_clause(query) if query)
+        sparql_hash: (Sparql.fingerprint(query) if query)
       )
     end
 

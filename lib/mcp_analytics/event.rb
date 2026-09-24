@@ -28,8 +28,6 @@ module McpAnalytics
         tool_name: call&.tool_name,
         resource_uri: call&.resource_uri,
         prompt_name: call&.prompt_name,
-        sparql_form: call&.sparql_form,
-        sparql_where: call&.sparql_where,
         user_agent: user_agent,
         client_name: client_name,
         client_version: client_version,
