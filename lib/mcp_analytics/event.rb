@@ -26,6 +26,7 @@ module McpAnalytics
       {
         mcp_method: call&.method_name,
         tool_name: call&.tool_name,
+        sparql_hash: call&.sparql_hash,
         resource_uri: call&.resource_uri,
         prompt_name: call&.prompt_name,
         user_agent: user_agent,
