@@ -13,7 +13,7 @@ class GetEntityTest < ActiveSupport::TestCase
   FORMATTED_ENTITY = {
     "id" => ENTITY_ID,
     "uri" => ENTITY_URI,
-    "types" => [{ "uri" => "http://schema.org/Organization", "label" => "Organization" }],
+    "types" => [{ "uri" => "http://kg.artsdata.ca/ontology/Organization", "label" => "Organization" }],
     "name" => [{ "value" => "Test Organization", "language" => "en" }]
   }.freeze
 

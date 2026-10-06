@@ -7,9 +7,10 @@ class SparqlClientTest < ActiveSupport::TestCase
   SELECT_QUERY = <<~SPARQL.freeze
     # Events and their names
     PREFIX schema: <http://schema.org/>
+    PREFIX ado: <http://kg.artsdata.ca/ontology/>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     SELECT ?event ?name WHERE {
-      ?event a schema:Event ; schema:name ?name .
+      ?event a ado:Event ; schema:name ?name .
     } LIMIT 2
   SPARQL
 

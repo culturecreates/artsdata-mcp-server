@@ -5,8 +5,9 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
 
   BASE = <<~SPARQL
     PREFIX schema: <http://schema.org/>
+    PREFIX ado: <http://kg.artsdata.ca/ontology/>
     SELECT ?event ?name WHERE {
-      ?event a schema:Event ; schema:name ?name .
+      ?event a ado:Event ; schema:name ?name .
       FILTER(CONTAINS(LCASE(STR(?name)), "festival"))
     } LIMIT 20
   SPARQL
@@ -24,8 +25,9 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
   test "renamed variables and different literals are the same shape" do
     assert_same_shape <<~SPARQL, "agents name variables differently every time"
       PREFIX schema: <http://schema.org/>
+      PREFIX ado: <http://kg.artsdata.ca/ontology/>
       SELECT ?e ?n WHERE {
-        ?e a schema:Event ; schema:name ?n .
+        ?e a ado:Event ; schema:name ?n .
         FILTER(CONTAINS(LCASE(STR(?n)), "opera"))
       } LIMIT 50
     SPARQL
@@ -34,7 +36,8 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
   test "a different prefix label is the same shape" do
     assert_same_shape <<~SPARQL, "prefix labels are arbitrary"
       PREFIX s: <http://schema.org/>
-      SELECT ?event ?name WHERE { ?event a s:Event ; s:name ?name .
+      PREFIX ado: <http://kg.artsdata.ca/ontology/>
+      SELECT ?event ?name WHERE { ?event a ado:Event ; s:name ?name .
         FILTER(CONTAINS(LCASE(STR(?name)), "festival")) } LIMIT 20
     SPARQL
   end
@@ -43,7 +46,8 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
     assert_same_shape <<~SPARQL, "only the shape should matter"
       # find festivals
       prefix schema: <http://schema.org/>
-      SELECT ?event ?name WHERE { ?event a schema:Event ; schema:name ?name .
+      prefix ado: <http://kg.artsdata.ca/ontology/>
+      SELECT ?event ?name WHERE { ?event a ado:Event ; schema:name ?name .
         FILTER(CONTAINS(LCASE(STR(?name)), "jazz")) } LIMIT 20
     SPARQL
   end
@@ -65,7 +69,8 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
   test "a different class is a different shape" do
     refute_same_shape <<~SPARQL, "Person is not Event"
       PREFIX schema: <http://schema.org/>
-      SELECT ?p ?n WHERE { ?p a schema:Person ; schema:name ?n .
+      PREFIX ado: <http://kg.artsdata.ca/ontology/>
+      SELECT ?p ?n WHERE { ?p a ado:Person ; schema:name ?n .
         FILTER(CONTAINS(LCASE(STR(?n)), "festival")) } LIMIT 20
     SPARQL
   end
@@ -73,7 +78,8 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
   test "dropping a FILTER is a different shape" do
     refute_same_shape <<~SPARQL, "the filter is part of the question"
       PREFIX schema: <http://schema.org/>
-      SELECT ?e ?n WHERE { ?e a schema:Event ; schema:name ?n . } LIMIT 20
+      PREFIX ado: <http://kg.artsdata.ca/ontology/>
+      SELECT ?e ?n WHERE { ?e a ado:Event ; schema:name ?n . } LIMIT 20
     SPARQL
   end
 
@@ -109,8 +115,9 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
   test "numbers inside an IRI are not neutralised" do
     query = <<~SPARQL
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX ado: <http://kg.artsdata.ca/ontology/>
       PREFIX schema: <http://schema.org/>
-      SELECT ?e WHERE { ?e rdf:type schema:Event } LIMIT 20
+      SELECT ?e WHERE { ?e rdf:type ado:Event } LIMIT 20
     SPARQL
 
     assert_includes S.normalize(query), "1999/02/22", "a year in a namespace is not a literal"
@@ -126,7 +133,8 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
     commented = <<~SPARQL
       # find events
       PREFIX schema: <http://schema.org/>
-      SELECT ?event ?name WHERE { ?event a schema:Event ; schema:name ?name .
+      PREFIX ado: <http://kg.artsdata.ca/ontology/>
+      SELECT ?event ?name WHERE { ?event a ado:Event ; schema:name ?name .
         FILTER(CONTAINS(LCASE(STR(?name)), "festival")) } # trailing note
       LIMIT 20
     SPARQL
@@ -143,7 +151,7 @@ class McpAnalytics::SparqlTest < ActiveSupport::TestCase
   # --- shape and robustness -------------------------------------------------
 
   test "the canonical shape reads as a template" do
-    assert_equal "SELECT ?v1 ?v2 WHERE { ?v1 a <http://schema.org/Event> ; " \
+    assert_equal "SELECT ?v1 ?v2 WHERE { ?v1 a <http://kg.artsdata.ca/ontology/Event> ; " \
                  "<http://schema.org/name> ?v2 . " \
                  "FILTER(CONTAINS(LCASE(STR(?v2)), \"?\")) } LIMIT 0",
                  S.normalize(BASE)

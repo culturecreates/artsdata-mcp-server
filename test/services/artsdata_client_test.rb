@@ -14,7 +14,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
           "id" => "K11-23",
           "properties" => [
             { "id" => "name", "values" => [{ "str" => "Test Organization", "lang" => "en" }] },
-            { "id" => "type", "values" => [{ "id" => "http://schema.org/Organization" }] }
+            { "id" => "type", "values" => [{ "id" => "http://kg.artsdata.ca/ontology/Organization" }] }
           ]
         }
       ]
@@ -44,7 +44,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
           "id" => "K1-1",
           "properties" => [
             { "id" => "name", "values" => [{ "str" => "Test Event", "lang" => "en" }] },
-            { "id" => "type", "values" => [{ "id" => "http://schema.org/Event" }] },
+            { "id" => "type", "values" => [{ "id" => "http://kg.artsdata.ca/ontology/Event" }] },
             { "id" => "startDate", "values" => [{ "str" => "2026-01-01" }] }
           ]
         }
@@ -55,7 +55,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
       {
         "id" => "K1-1",
         "uri" => "http://kg.artsdata.ca/resource/K1-1",
-        "types" => [{ "uri" => "http://schema.org/Event", "label" => "Event" }],
+        "types" => [{ "uri" => "http://kg.artsdata.ca/ontology/Event", "label" => "Event" }],
         "name" => [{ "value" => "Test Event", "language" => "en" }],
         "start_date" => "2026-01-01"
       }
@@ -189,13 +189,13 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                  "an empty has_event_type_concept list should not add a condition"
   end
 
-  test "search_events always queries type schema:Event, whatever the event type concepts are" do
+  test "search_events always queries type ado:Event, whatever the event type concepts are" do
     payload = search_events_with_captured_match_payload(
       has_event_type_concept: ["http://kg.artsdata.ca/resource/ClassicalMusicPerformance"]
     )
     query = payload[:queries].first
 
-    assert_equal "http://schema.org/Event", query[:type]
+    assert_equal "http://kg.artsdata.ca/ontology/Event", query[:type]
     assert_empty query[:conditions].select { |c| c[:propertyId] == ArtsdataClient::RDF_TYPE_PROPERTY_ID },
                  "event types are not matched on rdf:type"
   end
@@ -269,13 +269,13 @@ class ArtsdataClientTest < ActiveSupport::TestCase
         "id" => "K11-23",
         "name" => "Festival Example",
         "description" => "Sample festival organization",
-        "type" => [{ "id" => "http://schema.org/Organization", "name" => "Organization" }],
+        "type" => [{ "id" => "http://kg.artsdata.ca/ontology/Organization", "name" => "Organization" }],
         "uri" => "http://kg.artsdata.ca/resource/K11-23"
       },
       {
         "id" => "K11-24",
         "name" => "Festival Hall",
-        "type" => [{ "id" => "http://schema.org/Place", "name" => "Place" }],
+        "type" => [{ "id" => "http://kg.artsdata.ca/ontology/Place", "name" => "Place" }],
         "uri" => "http://kg.artsdata.ca/resource/K11-24"
       }
     ]
@@ -298,7 +298,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
 
   test "search_items matches several types with an rdf:type condition and no query type" do
     captured = {}
-    types = ["http://schema.org/Person", "http://www.w3.org/2004/02/skos/core#Concept"]
+    types = ["http://kg.artsdata.ca/ontology/Person", "http://www.w3.org/2004/02/skos/core#Concept"]
     search_items_with_stubbed_reconciliation(
       match_response: { "results" => [] }, captured: captured,
       query: "festival", types: types, lang: "en", limit: 25

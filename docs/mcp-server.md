@@ -102,7 +102,7 @@ type.
 | Parameter | Type | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 |---|---|---|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `query` | string | Yes | Non-empty search query.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `types` | array of type URIs | No | Filter results by entity type. One or more of `http://schema.org/Event`, `http://schema.org/Place`, `http://schema.org/Person`, `http://schema.org/Organization`, `http://dbpedia.org/ontology/Agent`, `http://www.w3.org/2004/02/skos/core#Concept`.                                                                                                                                                                                                                                                                                         |
+| `types` | array of type URIs | No | Filter results by entity type. One or more of `http://kg.artsdata.ca/ontology/Event`, `http://kg.artsdata.ca/ontology/Place`, `http://kg.artsdata.ca/ontology/Person`, `http://kg.artsdata.ca/ontology/Organization`, `http://dbpedia.org/ontology/Agent`, `http://www.w3.org/2004/02/skos/core#Concept`.                                                                                                                                                                                                                                                                                         |
 | `in_scheme` | array of URIs | No | `skos:ConceptScheme` URIs; results are restricted to concepts declared `skos:inScheme` one of them. The Artsdata vocabularies is `http://kg.artsdata.ca/resource/ArtsdataEventTypes`; the graph also holds vocabularies from other publishers, whose concepts the `search_events` filters do not accept. Normally combined with `types: ["http://www.w3.org/2004/02/skos/core#Concept"]`, to find the concept URI behind a label before calling `search_events` with `has_event_type_concept`. |
 | `language` | `en` \| `fr` | No (default `en`) | Language for matching/labels.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `limit` | integer (1–50) | No (default 25) | Max number of results.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -194,10 +194,8 @@ Retrieve full details for a single entity, given its Artsdata URI.
 
 ### `search_events`
 
-Search for events in the Artsdata knowledge graph by place, artist,
-organization, event type concept, and language. The reconciliation query is
-always typed `schema:Event`; event types are filtered on
-`ado:hasEventTypeConcept`, never on `rdf:type` or `schema:additionalType`.
+Search for events in the Artsdata knowledge graph by place, artist, organization, event type concept, and 
+language. The reconciliation query is always typed `ado:Event`; event types are filtered on `ado:hasEventTypeConcept`.
 
 **Input**
 
@@ -340,7 +338,7 @@ Guard rails:
 {
   "name": "sparql_query",
   "arguments": {
-    "query": "PREFIX schema: <http://schema.org/>\nSELECT ?event ?name WHERE { ?event a schema:Event ; schema:name ?name . FILTER(LANG(?name) = \"en\") } LIMIT 2"
+    "query": "PREFIX schema: <http://schema.org/>\nPREFIX ado: <http://kg.artsdata.ca/ontology/>\nSELECT ?event ?name WHERE { ?event a ado:Event ; schema:name ?name . FILTER(LANG(?name) = \"en\") } LIMIT 2"
   }
 }
 ```

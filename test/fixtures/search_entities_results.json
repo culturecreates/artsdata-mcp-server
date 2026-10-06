@@ -5,7 +5,7 @@
     "description": "Sample fixture entity",
     "type": [
       {
-        "id": "http://schema.org/Organization",
+        "id": "http://kg.artsdata.ca/ontology/Organization",
         "name": "Organization"
       }
     ],
@@ -17,7 +17,7 @@
     "description": "Another fixture entity",
     "type": [
       {
-        "id": "http://schema.org/Organization",
+        "id": "http://kg.artsdata.ca/ontology/Organization",
         "name": "Organization"
       }
     ],

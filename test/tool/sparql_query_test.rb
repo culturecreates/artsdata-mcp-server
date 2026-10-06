@@ -6,7 +6,7 @@ class SparqlQueryTest < ActiveSupport::TestCase
   REQUEST_SCHEMA_PATH = Rails.root.join("app", "schema", "sparql_query_request_schema.json")
   RESPONSE_SCHEMA_PATH = Rails.root.join("app", "schema", "sparql_query_response_schema.json")
 
-  QUERY = "PREFIX schema: <http://schema.org/>\nSELECT ?event ?name WHERE { ?event a schema:Event ; schema:name ?name } LIMIT 1".freeze
+  QUERY = "PREFIX schema: <http://schema.org/>\nPREFIX ado: <http://kg.artsdata.ca/ontology/>\nSELECT ?event ?name WHERE { ?event a ado:Event ; schema:name ?name } LIMIT 1".freeze
 
   SELECT_RESULT = {
     "head" => { "vars" => %w[event name] },

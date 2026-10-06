@@ -62,7 +62,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       :search_items,
       fixture_results,
       [],
-      query: "festival", types: ["http://schema.org/Organization"], in_scheme: [], lang: "en", limit: 2
+      query: "festival", types: ["http://kg.artsdata.ca/ontology/Organization"], in_scheme: [], lang: "en", limit: 2
     )
     mock_client.expect(
       :get_entity_by_extend_service,
@@ -80,7 +80,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
           name: "search_entities",
           arguments: {
             query: "festival",
-            types: ["http://schema.org/Organization"],
+            types: ["http://kg.artsdata.ca/ontology/Organization"],
             language: "en",
             limit: 2
           }

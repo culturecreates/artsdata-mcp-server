@@ -16,10 +16,10 @@
         "type": "string",
         "format": "uri",
         "enum": [
-          "http://schema.org/Event",
-          "http://schema.org/Place",
-          "http://schema.org/Person",
-          "http://schema.org/Organization",
+          "http://kg.artsdata.ca/ontology/Event",
+          "http://kg.artsdata.ca/ontology/Place",
+          "http://kg.artsdata.ca/ontology/Person",
+          "http://kg.artsdata.ca/ontology/Organization",
           "http://dbpedia.org/ontology/Agent",
           "http://www.w3.org/2004/02/skos/core#Concept"
         ]

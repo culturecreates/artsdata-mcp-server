@@ -6,7 +6,7 @@
       "id" : "K11-23",
       "name" : "Festival Example",
       "description" : "Sample festival organization",
-      "type" : [{ "id" : "http://schema.org/Organization", "name" : "Organization" }],
+      "type" : [{ "id" : "http://kg.artsdata.ca/ontology/Organization", "name" : "Organization" }],
     "score" : 98.5,
     "match" : true,
     "features" : [{ "id" : "name", "value" : 100 }]
@@ -14,7 +14,7 @@
     {
     "id" : "K11-24",
     "name" : "Festival Hall",
-    "type" : [{ "id" : "http://schema.org/Place", "name" : "Place" }],
+    "type" : [{ "id" : "http://kg.artsdata.ca/ontology/Place", "name" : "Place" }],
     "score" : 71.0,
     "match" : false,
     "features" : []

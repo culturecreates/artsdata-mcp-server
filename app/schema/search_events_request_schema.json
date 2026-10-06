@@ -20,7 +20,7 @@
         "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of Artsdata VENUE URIs (e.g., [\"http://kg.artsdata.ca/resource/K11-2\"]) for a theatre, hall, auditorium, room or stage. Only venue URIs work: a city, region or country (e.g. 'Toronto', 'Ontario', 'Canada') is not a venue and returns no events. First find the venue's URI with search_entities (types: ['http://schema.org/Place']) using the venue name. A venue URI also covers the rooms and halls inside it (schema:containedInPlace). To find events in a city or region, use sparql_query. Can be left empty."
+      "description": "Optional list of Artsdata VENUE URIs (e.g., [\"http://kg.artsdata.ca/resource/K11-2\"]) for a theatre, hall, auditorium, room or stage. Only venue URIs work: a city, region or country (e.g. 'Toronto', 'Ontario', 'Canada') is not a venue and returns no events. First find the venue's URI with search_entities (types: ['http://kg.artsdata.ca/ontology/Place']) using the venue name. A venue URI also covers the rooms and halls inside it (schema:containedInPlace). To find events in a city or region, use sparql_query. Can be left empty."
     },
     "artists": {
       "type": "array",
@@ -29,7 +29,7 @@
         "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of Artsdata artist URIs (e.g., [\"http://kg.artsdata.ca/resource/K2-6574\"]). If you only have a name, use search_entities (types: ['Person']) to find its URI first. Can be left empty."
+      "description": "Optional list of Artsdata artist URIs (e.g., [\"http://kg.artsdata.ca/resource/K2-6574\"]). If you only have a name, use search_entities (types: ['http://kg.artsdata.ca/ontology/Person']) to find its URI first. Can be left empty."
     },
     "organizations": {
       "type": "array",
@@ -38,7 +38,7 @@
         "format": "uri"
       },
       "uniqueItems": true,
-      "description": "Optional list of Artsdata organization URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-72\"]). If you only have a name, use search_entities (types: ['Organization']) to find its URI first. Can be left empty."
+      "description": "Optional list of Artsdata organization URIs (e.g., [\"http://kg.artsdata.ca/resource/K5-72\"]). If you only have a name, use search_entities (types: ['http://kg.artsdata.ca/ontology/Organization']) to find its URI first. Can be left empty."
     },
     "has_event_type_concept": {
       "type": "array",

@@ -4,8 +4,8 @@ require "json"
 
 class ArtsdataClient
 
-  SCHEMA_BASE_URL = 'http://schema.org/'.freeze
   ARTSDATA_BASE_URL = 'http://kg.artsdata.ca/resource/'.freeze
+  ARTSDATA_ONTOLOGY_BASE_URL = 'http://kg.artsdata.ca/ontology/'.freeze
 
   SKOS_BASE_URL = 'http://www.w3.org/2004/02/skos/core#'.freeze
 
@@ -17,7 +17,7 @@ class ArtsdataClient
   ORGANIZER_OR_PERFORMER_PROPERTY_ID = 'schema:organizer|schema:performer'.freeze
   HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID = 'http://kg.artsdata.ca/ontology/hasEventTypeConcept'.freeze
 
-  EVENT_TYPE_URI = "#{SCHEMA_BASE_URL}Event".freeze
+  EVENT_TYPE_URI = "#{ARTSDATA_ONTOLOGY_BASE_URL}Event".freeze
 
   MATCH_QUANTIFIER_ANY = 'any'.freeze
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
@@ -124,7 +124,7 @@ class ArtsdataClient
 
       # Fallback to default Event type if list is empty
       if parsed_types.empty?
-        parsed_types = [{ "uri" => "http://schema.org/Event", "label" => "Event" }]
+        parsed_types = [{ "uri" => "http://kg.artsdata.ca/ontology/Event", "label" => "Event" }]
       end
 
       result = {
