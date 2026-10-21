@@ -44,6 +44,7 @@ class LlmsTxtBuilder
     sections << ""
     sections << "- Prefer MCP tools over scraping website HTML when possible."
     sections << "- Call get_schema before writing SPARQL for this graph model."
+    sections << "- #{ArtsdataIdRule::INSTRUCTION}"
     sections << "- For raw graph queries, use sparql_query with explicit PREFIX declarations and LIMIT."
 
     sections.join("\n") + "\n"

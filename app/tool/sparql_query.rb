@@ -12,7 +12,9 @@ class SparqlQuery < MCP::Tool
               "(the rest is cut and truncated is true; page with OFFSET), and a query gets " \
               "#{SparqlClient.timeout} seconds. If the endpoint rejects the query, its error " \
               "message is returned so you can fix the query and retry. For the details of an entity URI in " \
-              "the results use get_entity; to find an entity's URI from its name use search_entities."
+              "the results use get_entity; to find an entity's URI from its name use search_entities. " \
+              "Always SELECT the entity URI next to its label so its Artsdata ID can be cited. " \
+              "#{ArtsdataIdRule::TOOL_NOTE}"
 
   request_schema_path = File.expand_path("../schema/sparql_query_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
