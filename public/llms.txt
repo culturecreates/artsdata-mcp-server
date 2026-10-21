@@ -7,13 +7,13 @@
 - MCP server endpoint: https://mcp.artsdata.ca/mcp
 - Transport: Streamable HTTP (JSON-RPC 2.0 over POST)
 - Session model: stateless
-- Server instructions: Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query. To answer a question with SPARQL, call get_schema to learn the data model, write the query and run it with sparql_query, then use get_entity (details of a URI) or search_entities (URI from a name) as needed. When you mention an event, place, person or organization that has an Artsdata URI (http://kg.artsdata.ca/resource/K12-345), cite its Artsdata ID (the ID matching K\d+-\d+ at the end of the URI) on first mention, formatted as 'Name (K12-345)'. search_entities results include a ready-made `label` in that format; use it. Take IDs only from tool results, never invent them; entities with other URIs (e.g. Wikidata) have no Artsdata ID. To find the ID of an entity you only know by name, use search_entities.
+- Server instructions: Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query. To answer a question with SPARQL, call get_schema to learn the data model, write the query and run it with sparql_query, then use get_entity (details of a URI) or search_entities (URI from a name) as needed. When you mention an event, place, person or organization that has an Artsdata URI (http://kg.artsdata.ca/resource/K12-345), cite its Artsdata ID (the ID matching K\d+-\d+ at the end of the URI) on first mention, formatted as 'Name (K12-345)'. search_entities results include a ready-made markdown-link `label` showing that format; use it. Take IDs only from tool results, never invent them; entities with other URIs (e.g. Wikidata) have no Artsdata ID. To find the ID of an entity you only know by name, use search_entities.
 
 ## MCP tools
 
 ### search_entities
 
-Tool to search for entities in the Artsdata knowledge graph by name, with optional filters on entity type and on the controlled vocabulary (skos:ConceptScheme) a concept belongs to. Each result has a `label` like 'Name (K12-345)': use it verbatim when mentioning the entity.
+Tool to search for entities in the Artsdata knowledge graph by name, with optional filters on entity type and on the controlled vocabulary (skos:ConceptScheme) a concept belongs to. Each result has a markdown-link `label` like '[Name (K12-345)](https://kg.artsdata.ca/resource/K12-345)': use it verbatim when mentioning the entity.
 
 Input parameters
 - query (string, required): Non-empty mandatory search query.
@@ -87,5 +87,5 @@ Output
 
 - Prefer MCP tools over scraping website HTML when possible.
 - Call get_schema before writing SPARQL for this graph model.
-- When you mention an event, place, person or organization that has an Artsdata URI (http://kg.artsdata.ca/resource/K12-345), cite its Artsdata ID (the ID matching K\d+-\d+ at the end of the URI) on first mention, formatted as 'Name (K12-345)'. search_entities results include a ready-made `label` in that format; use it. Take IDs only from tool results, never invent them; entities with other URIs (e.g. Wikidata) have no Artsdata ID. To find the ID of an entity you only know by name, use search_entities.
+- When you mention an event, place, person or organization that has an Artsdata URI (http://kg.artsdata.ca/resource/K12-345), cite its Artsdata ID (the ID matching K\d+-\d+ at the end of the URI) on first mention, formatted as 'Name (K12-345)'. search_entities results include a ready-made markdown-link `label` showing that format; use it. Take IDs only from tool results, never invent them; entities with other URIs (e.g. Wikidata) have no Artsdata ID. To find the ID of an entity you only know by name, use search_entities.
 - For raw graph queries, use sparql_query with explicit PREFIX declarations and LIMIT.

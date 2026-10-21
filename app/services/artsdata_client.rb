@@ -284,7 +284,7 @@ class ArtsdataClient
       uri = "http://kg.artsdata.ca/resource/#{candidate['id']}"
 
       # Merge/override the computed URI and strip out unwanted keys
-      candidate.merge("uri" => uri, "label" => "#{candidate['name']} (#{candidate['id']})").except("score", "match", "features")
+      candidate.merge("uri" => uri, "label" => "[#{candidate['name']} (#{candidate['id']})](#{uri.sub('http:', 'https:')})").except("score", "match", "features")
     end
   end
 

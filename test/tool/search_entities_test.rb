@@ -226,7 +226,7 @@ class SearchEntitiesTest < ActiveSupport::TestCase
     assert_equal %w[K11-23 K11-24], results.map { |r| r["id"] }
     assert_equal "http://kg.artsdata.ca/resource/K11-23", results.first["uri"]
     results.each do |result|
-      assert_equal "#{result['name']} (#{result['id']})", result["label"]
+      assert_equal "[#{result['name']} (#{result['id']})](https://kg.artsdata.ca/resource/#{result['id']})", result["label"]
     end
     results.each do |result|
       %w[score match features].each do |stripped|
