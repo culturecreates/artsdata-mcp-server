@@ -26,6 +26,20 @@
         "$ref": "#/$defs/multiLingualString"
       }
     },
+    "sources": {
+      "type": "array",
+      "description": "Datasets the entity was built from. A dataset with a maintainer is given by the maintainer's website (url), otherwise by name.",
+      "items": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": {
+          "uri": { "type": "string", "format": "uri" },
+          "url": { "type": "string", "format": "uri" },
+          "name": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
     "alternate_names": {
       "type": "array",
       "items": {

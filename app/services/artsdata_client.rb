@@ -19,6 +19,9 @@ class ArtsdataClient
 
   EVENT_TYPE_URI = "#{ARTSDATA_ONTOLOGY_BASE_URL}Event".freeze
 
+  SOURCES_TIMEOUT_SECONDS = 5
+  SAFE_ENTITY_URI = %r{\Ahttps?://[^\s<>"{}|\\^`]+\z}
+
   MATCH_QUANTIFIER_ANY = 'any'.freeze
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
 
@@ -237,7 +240,33 @@ class ArtsdataClient
     ids.empty? ? [] : get_entity_by_extend_service(ids:)
   end
 
+  # The datasets an entity was built from, through the source records that are schema:sameAs the
+  # entity. A dataset with a schema:maintainer (its website) is returned as {uri, url}, otherwise as
+  # {uri, name}. Best effort: any SPARQL failure yields [] so it never breaks the caller.
+  def entity_sources(uri)
+    return [] unless uri.to_s.match?(SAFE_ENTITY_URI)
+
+    query = "SELECT ?dataset ?name ?maintainer WHERE { <#{uri}> ^<http://schema.org/sameAs>/<http://rdfs.org/ns/void#inDataset> ?dataset . " \
+            "OPTIONAL { ?dataset <http://schema.org/name> ?name } OPTIONAL { ?dataset <http://schema.org/maintainer> ?maintainer } } LIMIT 50"
+    rows = SparqlClient.new(timeout: SOURCES_TIMEOUT_SECONDS).query(query).dig("results", "bindings") || []
+
+    rows.group_by { |row| row.dig("dataset", "value") }.map do |dataset, dataset_rows|
+      maintainer = dataset_rows.filter_map { |row| row.dig("maintainer", "value").presence }.first
+      name = dataset_rows.filter_map { |row| row.dig("name", "value").presence }.first
+      maintainer ? { "uri" => dataset, "url" => maintainer_url(maintainer) } : { "uri" => dataset, "name" => name }.compact
+    end
+  rescue SparqlClient::Error => e
+    Rails.logger.error("ArtsdataClient#entity_sources failed for #{uri}: #{e.message}")
+    []
+  end
+
   private
+
+  # A maintainer is the source's website, sometimes written as a bare domain: always return a URL.
+  def maintainer_url(maintainer)
+    value = maintainer.strip
+    value.match?(%r{\Ahttps?://}i) ? value : "https://#{value}"
+  end
 
   def date_range_condition(start_date_from, start_date_to)
     return nil if start_date_from.blank? && start_date_to.blank?

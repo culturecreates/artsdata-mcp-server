@@ -78,6 +78,7 @@ class McpAnalyticsReportingTest < ActionDispatch::IntegrationTest
 
     mock_client = Minitest::Mock.new
     mock_client.expect(:get_entity_by_extend_service, [entity], [], ids: ["K23-934"])
+    mock_client.expect(:entity_sources, [], [Object])
 
     ArtsdataClient.stub(:new, mock_client) do
       body = mcp_post(
@@ -108,6 +109,7 @@ class McpAnalyticsReportingTest < ActionDispatch::IntegrationTest
   test "the user agent is recorded verbatim on a plain tool call" do
     mock_client = Minitest::Mock.new
     mock_client.expect(:get_entity_by_extend_service, [{ "id" => "K23-934" }], [], ids: ["K23-934"])
+    mock_client.expect(:entity_sources, [], [Object])
 
     ArtsdataClient.stub(:new, mock_client) do
       mcp_post(

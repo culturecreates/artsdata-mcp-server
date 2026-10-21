@@ -5,6 +5,54 @@ class ArtsdataClientTest < ActiveSupport::TestCase
 
   RECON_MATCH_FIXTURE_PATH = Rails.root.join("test", "fixtures", "search_entities_recon_match_results.json")
 
+  def sources_response(*rows)
+    { "results" => { "bindings" => rows } }
+  end
+
+  def binding_row(dataset, name: nil, maintainer: nil)
+    row = { "dataset" => { "type" => "uri", "value" => dataset } }
+    row["name"] = { "type" => "literal", "value" => name } if name
+    row["maintainer"] = { "type" => "literal", "value" => maintainer } if maintainer
+    row
+  end
+
+  def entity_sources_with(response)
+    fake = Object.new
+    fake.define_singleton_method(:query) { |_q| response }
+    SparqlClient.stub(:new, ->(**) { fake }) { ArtsdataClient.new.entity_sources("http://kg.artsdata.ca/resource/K11-23") }
+  end
+
+  test "entity_sources returns the maintainer as a url, else the name" do
+    result = entity_sources_with(sources_response(
+      binding_row("http://kg.artsdata.ca/a", name: "scenepro-orgs", maintainer: "scenepro.ca"),
+      binding_row("http://kg.artsdata.ca/b", name: "Other", maintainer: "https://thecultch.com"),
+      binding_row("http://kg.artsdata.ca/resource/K1-20", name: "Wikidata"),
+      binding_row("http://kg.artsdata.ca/resource/K1-21")
+    ))
+
+    assert_equal [
+      { "uri" => "http://kg.artsdata.ca/a", "url" => "https://scenepro.ca" },
+      { "uri" => "http://kg.artsdata.ca/b", "url" => "https://thecultch.com" },
+      { "uri" => "http://kg.artsdata.ca/resource/K1-20", "name" => "Wikidata" },
+      { "uri" => "http://kg.artsdata.ca/resource/K1-21" }
+    ], result
+  end
+
+  test "entity_sources merges repeated rows of one dataset" do
+    result = entity_sources_with(sources_response(
+      binding_row("http://kg.artsdata.ca/a", name: "A (en)"), binding_row("http://kg.artsdata.ca/a", name: "A (fr)")
+    ))
+    assert_equal 1, result.size
+  end
+
+  test "entity_sources returns [] on a SPARQL error or an unsafe uri" do
+    failing = Object.new
+    failing.define_singleton_method(:query) { |_q| raise SparqlClient::Error, "down" }
+    result = SparqlClient.stub(:new, ->(**) { failing }) { ArtsdataClient.new.entity_sources("http://kg.artsdata.ca/resource/K11-23") }
+    assert_equal [], result
+    assert_equal [], ArtsdataClient.new.entity_sources("http://x/> } DROP")
+  end
+
   test "get_entity_by_extend_service accepts an ids keyword and returns one formatted entity per row" do
     ids = ["K11-23"]
     client = ArtsdataClient.new

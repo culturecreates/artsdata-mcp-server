@@ -83,6 +83,7 @@ class GetEntityTest < ActiveSupport::TestCase
   test "call returns the entity as structured content and as matching JSON text content" do
     mock_client = Minitest::Mock.new
     mock_client.expect(:get_entity_by_extend_service, [FORMATTED_ENTITY], [], ids: [ENTITY_ID])
+    mock_client.expect(:entity_sources, [], [Object])
 
     response = ArtsdataClient.stub(:new, mock_client) do
       GetEntity.call(uri: ENTITY_URI)
@@ -143,14 +144,31 @@ class GetEntityTest < ActiveSupport::TestCase
   end
 
 
+  test "call adds the sources of the entity and the response still validates" do
+    sources = [{ "uri" => "http://kg.artsdata.ca/resource/K1-20", "name" => "Wikidata" },
+               { "uri" => "http://kg.artsdata.ca/culture-creates/x/y", "url" => "https://scenepro.ca" }]
+    response = call_get_entity_with_stubbed_reconciliation(extend_response: EXTEND_RESPONSE, sources: sources)
+
+    wire_response = JSON.parse(response.content.first[:text])
+    assert_equal sources, wire_response.fetch("sources")
+    errors = JSONSchemer.schema(RESPONSE_SCHEMA_PATH).validate(wire_response).to_a
+    assert_empty errors, "response schema validation errors: #{errors.map { |e| e['error'] }.join('; ')}"
+  end
+
+  test "call omits sources when there are none" do
+    response = call_get_entity_with_stubbed_reconciliation(extend_response: EXTEND_RESPONSE)
+    refute JSON.parse(response.content.first[:text]).key?("sources")
+  end
+
   private
 
   # Stubs execute_reconciliation_query on a real ArtsdataClient instance (and makes
   # ArtsdataClient.new return that instance), so GetEntity.call exercises the real client
   # implementation end to end, with only the network call replaced by canned data. Anything
   # passed to the reconciliation service is recorded in `captured`.
-  def call_get_entity_with_stubbed_reconciliation(extend_response:, captured: {})
+  def call_get_entity_with_stubbed_reconciliation(extend_response:, captured: {}, sources: [])
     real_client = ArtsdataClient.new
+    real_client.define_singleton_method(:entity_sources) { |_uri| sources }
 
     record_and_respond = lambda do |payload, **options|
       captured[:payload] = payload
