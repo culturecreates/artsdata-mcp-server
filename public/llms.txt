@@ -7,13 +7,13 @@
 - MCP server endpoint: https://mcp.artsdata.ca/mcp
 - Transport: Streamable HTTP (JSON-RPC 2.0 over POST)
 - Session model: stateless
-- Server instructions: Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query. To answer a question with SPARQL, call get_schema to learn the data model, write the query and run it with sparql_query, then use get_entity (details of a URI) or search_entities (URI from a name) as needed.
+- Server instructions: Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query. To answer a question with SPARQL, call get_schema to learn the data model, write the query and run it with sparql_query, then use get_entity (details of a URI) or search_entities (URI from a name) as needed. When you mention an event, place, person or organization that has an Artsdata URI (http://kg.artsdata.ca/resource/K12-345), cite its Artsdata ID (the ID matching K\d+-\d+ at the end of the URI) on first mention, formatted as 'Name (K12-345)'. search_entities results include a ready-made markdown-link `label` showing that format; use it. Take IDs only from tool results, never invent them; entities with other URIs (e.g. Wikidata) have no Artsdata ID. To find the ID of an entity you only know by name, use search_entities.
 
 ## MCP tools
 
 ### search_entities
 
-Tool to search for entities in the Artsdata knowledge graph by name, with optional filters on entity type and on the controlled vocabulary (skos:ConceptScheme) a concept belongs to.
+Tool to search for entities in the Artsdata knowledge graph by name, with optional filters on entity type and on the controlled vocabulary (skos:ConceptScheme) a concept belongs to. Each result has a markdown-link `label` like '[Name (K12-345)](https://kg.artsdata.ca/resource/K12-345)': use it verbatim when mentioning the entity.
 
 Input parameters
 - query (string, required): Non-empty mandatory search query.
@@ -27,7 +27,7 @@ Output
 
 ### get_entity
 
-Tool to get entities details from Artsdata Knowledge Graph by entity URI.
+Tool to get entities details from Artsdata Knowledge Graph by entity URI. Entity URIs end in the Artsdata ID (K\d+-\d+, e.g. K12-345); cite it with the entity name.
 
 Input parameters
 - uri (string, required): The Artsdata entity URI.
@@ -37,7 +37,7 @@ Output
 
 ### search_events
 
-Tool to search for events in the Artsdata knowledge graph by place, artist, organization, has_event_type_concept and language. Places, artists and organizations are Artsdata entity URIs; the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with search_entities first. Places must be venues; for events in a city or region, use sparql_query (see the places parameter).
+Tool to search for events in the Artsdata knowledge graph by place, artist, organization, has_event_type_concept and language. Places, artists and organizations are Artsdata entity URIs; the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with search_entities first. Places must be venues; for events in a city or region, use sparql_query (see the places parameter). Entity URIs end in the Artsdata ID (K\d+-\d+, e.g. K12-345); cite it with the entity name.
 
 Input parameters
 - startDateFrom (string, optional): Optional lower bound filter. Includes events starting on or after this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ).
@@ -64,7 +64,7 @@ Output
 
 ### sparql_query
 
-Runs a read-only SPARQL 1.1 SELECT or ASK query against the Artsdata Knowledge Graph (https://query.artsdata.ca/query) and returns the result as SPARQL 1.1 Query Results JSON, exactly as the endpoint returns it: head.vars and results.bindings for SELECT, boolean for ASK. Call get_schema first and build the query from the classes, properties, prefixes and conventions it returns, since Artsdata's model is not general knowledge. Declare every PREFIX you use and always add a LIMIT: at most 1000 rows are returned (the rest is cut and truncated is true; page with OFFSET), and a query gets 25 seconds. If the endpoint rejects the query, its error message is returned so you can fix the query and retry. For the details of an entity URI in the results use get_entity; to find an entity's URI from its name use search_entities.
+Runs a read-only SPARQL 1.1 SELECT or ASK query against the Artsdata Knowledge Graph (https://query.artsdata.ca/query) and returns the result as SPARQL 1.1 Query Results JSON, exactly as the endpoint returns it: head.vars and results.bindings for SELECT, boolean for ASK. Call get_schema first and build the query from the classes, properties, prefixes and conventions it returns, since Artsdata's model is not general knowledge. Declare every PREFIX you use and always add a LIMIT: at most 1000 rows are returned (the rest is cut and truncated is true; page with OFFSET), and a query gets 25 seconds. If the endpoint rejects the query, its error message is returned so you can fix the query and retry. For the details of an entity URI in the results use get_entity; to find an entity's URI from its name use search_entities. Always SELECT the entity URI next to its label so its Artsdata ID can be cited. Entity URIs end in the Artsdata ID (K\d+-\d+, e.g. K12-345); cite it with the entity name.
 
 Input parameters
 - query (string, required): A complete SPARQL 1.1 SELECT or ASK query, with a PREFIX declaration for every prefix it uses. Build it from the classes, properties and prefixes returned by get_schema, and add a LIMIT.
@@ -87,4 +87,5 @@ Output
 
 - Prefer MCP tools over scraping website HTML when possible.
 - Call get_schema before writing SPARQL for this graph model.
+- When you mention an event, place, person or organization that has an Artsdata URI (http://kg.artsdata.ca/resource/K12-345), cite its Artsdata ID (the ID matching K\d+-\d+ at the end of the URI) on first mention, formatted as 'Name (K12-345)'. search_entities results include a ready-made markdown-link `label` showing that format; use it. Take IDs only from tool results, never invent them; entities with other URIs (e.g. Wikidata) have no Artsdata ID. To find the ID of an entity you only know by name, use search_entities.
 - For raw graph queries, use sparql_query with explicit PREFIX declarations and LIMIT.

@@ -270,13 +270,15 @@ class ArtsdataClientTest < ActiveSupport::TestCase
         "name" => "Festival Example",
         "description" => "Sample festival organization",
         "type" => [{ "id" => "http://kg.artsdata.ca/ontology/Organization", "name" => "Organization" }],
-        "uri" => "http://kg.artsdata.ca/resource/K11-23"
+        "uri" => "http://kg.artsdata.ca/resource/K11-23",
+        "label" => "[Festival Example (K11-23)](https://kg.artsdata.ca/resource/K11-23)"
       },
       {
         "id" => "K11-24",
         "name" => "Festival Hall",
         "type" => [{ "id" => "http://kg.artsdata.ca/ontology/Place", "name" => "Place" }],
-        "uri" => "http://kg.artsdata.ca/resource/K11-24"
+        "uri" => "http://kg.artsdata.ca/resource/K11-24",
+        "label" => "[Festival Hall (K11-24)](https://kg.artsdata.ca/resource/K11-24)"
       }
     ]
 
