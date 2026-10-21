@@ -41,6 +41,7 @@ class ArtsdataSchema
       "list a vocabulary's concepts with ?concept skos:inScheme <scheme>. Concepts can be owl:deprecated.",
     "`equivalent_classes`, `subclass_of`, `sub_property_of` and `equivalent_properties` come from the " \
       "Artsdata Ontology (OWL-Horst profile). Query with the `class` and `path` names listed here.",
+    ArtsdataSourcesRule::CONVENTION,
     "This describes what the CORE graph is validated against, not every triple in it: entities can carry " \
       "properties that are not listed."
   ].freeze

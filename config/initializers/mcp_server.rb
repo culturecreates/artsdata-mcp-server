@@ -7,7 +7,7 @@ Rails.application.config.to_prepare do
     instructions: "Access Artsdata's public APIs through a secure, lightweight, LLM-optimized layer designed for efficient querying by autonomous agents and users alike. SPARQL endpoint: https://query.artsdata.ca/query. " \
                   "To answer a question with SPARQL, call get_schema to learn the data model, write the query and run it " \
                   "with sparql_query, then use get_entity (details of a URI) or search_entities (URI from a name) as needed. " \
-                  "#{ArtsdataIdRule::INSTRUCTION}",
+                  "#{ArtsdataIdRule::INSTRUCTION} #{ArtsdataSourcesRule::INSTRUCTION}",
     tools: [
       SearchEntities, # search for entities
       GetEntity, # get entity details by uri

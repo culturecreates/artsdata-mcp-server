@@ -3,7 +3,7 @@ require "json"
 
 class GetEntity < MCP::Tool
 
-  description "Tool to get entities details from Artsdata Knowledge Graph by entity URI. #{ArtsdataIdRule::TOOL_NOTE}"
+  description "Tool to get entities details from Artsdata Knowledge Graph by entity URI. #{ArtsdataIdRule::TOOL_NOTE} #{ArtsdataSourcesRule::GET_ENTITY_NOTE}"
 
   request_schema_path = File.expand_path("../schema/get_entity_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
@@ -17,7 +17,10 @@ class GetEntity < MCP::Tool
   class << self
     def call(uri:)
       ids = [uri.split('/').last]
-      result = ArtsdataClient.new.get_entity_by_extend_service(ids:).first
+      client = ArtsdataClient.new
+      result = client.get_entity_by_extend_service(ids:).first
+      sources = result && client.entity_sources(result["uri"])
+      result["sources"] = sources if sources.present?
       MCP::Tool::Response.new([{ type: "text", text: JSON.generate(result) }], structured_content: result)
     end
   end

@@ -70,6 +70,7 @@ class McpSearchEntitiesFlowTest < ActionDispatch::IntegrationTest
       [],
       ids: [searched_uri.split("/").last]
     )
+    mock_client.expect(:entity_sources, [], [Object])
 
     ArtsdataClient.stub(:new, mock_client) do
       search_entities_response = mcp_post(
