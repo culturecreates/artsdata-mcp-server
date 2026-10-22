@@ -125,6 +125,42 @@ class ArtsdataClientTest < ActiveSupport::TestCase
   end
 
 
+  test "search_events retries ids the extend service returned as null and drops any still missing" do
+    match_response = { "results" => [{ "candidates" => [{ "id" => "K1-1" }, { "id" => "K1-2" }, { "id" => "K1-3" }] }] }
+    row = ->(id) { { "id" => id, "properties" => [{ "id" => "name", "values" => [{ "str" => id }] }] } }
+    extend_requests = []
+
+    stubbed = lambda do |payload, **options|
+      next match_response if options[:route] == "match"
+
+      extend_requests << payload[:ids]
+      extend_requests.size == 1 ? { "rows" => [row.call("K1-1"), nil, nil] } : { "rows" => [row.call("K1-2"), nil] }
+    end
+
+    client = ArtsdataClient.new
+    result = client.stub(:execute_reconciliation_query, stubbed) do
+      client.search_events(**SEARCH_EVENTS_DEFAULT_PARAMS.merge(startDateFrom: "2026-01-01"))
+    end
+
+    assert_equal [%w[K1-1 K1-2 K1-3], %w[K1-2 K1-3]], extend_requests
+    assert_equal %w[K1-1 K1-2], result.map { |r| r["id"] }
+  end
+
+  test "search_events returns no results when the match request fails" do
+    client = ArtsdataClient.new
+    result = client.stub(:execute_reconciliation_query, ->(*, **) { {} }) do
+      client.search_events(**SEARCH_EVENTS_DEFAULT_PARAMS.merge(startDateFrom: "2026-01-01"))
+    end
+
+    assert_equal [], result
+  end
+
+  test "search_events raises a descriptive error when no filter is given" do
+    error = assert_raises(ArgumentError) { ArtsdataClient.new.search_events(**SEARCH_EVENTS_DEFAULT_PARAMS) }
+
+    assert_equal ArtsdataClient::NO_FILTER_MESSAGE, error.message
+  end
+
   test "search_events matches artist URIs on the organizer and performer properties" do
     uris = ["http://kg.artsdata.ca/resource/K1-1", "http://kg.artsdata.ca/resource/K1-2"]
     payload = search_events_with_captured_match_payload(artists: uris)
@@ -264,11 +300,6 @@ class ArtsdataClientTest < ActiveSupport::TestCase
                    ORGANIZER_OR_PERFORMER_PROPERTY_ID,
                    ArtsdataClient::HAS_EVENT_TYPE_CONCEPT_PROPERTY_ID
                  ], payload[:queries].first[:conditions].map { |c| c[:propertyId] }
-  end
-
-  test "search_events sends no conditions at all when no filter is given" do
-    assert_empty search_events_with_captured_match_payload[:queries].first[:conditions],
-                 "an unfiltered search should send an empty condition list, not a nil entry"
   end
 
   test "format_get_entity_results returns an empty array when given no rows" do
@@ -435,7 +466,7 @@ class ArtsdataClientTest < ActiveSupport::TestCase
     end
 
     client.stub(:execute_reconciliation_query, record_and_respond) do
-      client.search_events(**SEARCH_EVENTS_DEFAULT_PARAMS.merge(params))
+      client.search_events(**SEARCH_EVENTS_DEFAULT_PARAMS.merge(startDateFrom: "2026-01-01").merge(params))
     end
 
     captured.fetch("match")
