@@ -23,6 +23,7 @@ class ArtsdataClient
   SAFE_ENTITY_URI = %r{\Ahttps?://[^\s<>"{}|\\^`]+\z}
 
   MATCH_QUANTIFIER_ANY = 'any'.freeze
+  NO_FILTER_MESSAGE = 'Provide at least one filter: a date range, place, artist, organization or event type concept.'.freeze
   MATCH_QUALIFIER_DATE_RANGE_URI = "http://kg.artsdata.ca/resource/reconciliation-qualifier-date-range"
 
   attr_reader :reconciliation_endpoint
@@ -108,7 +109,7 @@ class ArtsdataClient
                  single_str_fields.values.flatten + single_id_fields.values.flatten +
                  value_list_fields.values.flatten + %w[hasEventTypeConcept] + entity_ref_fields
 
-    input_data.map do |entity|
+    input_data.compact.map do |entity|
       props = (entity["properties"] || []).group_by { |p| p["id"] }
       values_for = ->(ids) { ids.map { |id| props[id] }.compact.first&.first&.fetch("values", nil) }
 
@@ -201,7 +202,16 @@ class ArtsdataClient
     }
 
     body = execute_reconciliation_query(payload, route: 'extend')
-    format_get_entity_results(body.fetch("rows", []))
+    rows = body.fetch("rows", [])
+
+    # The extend service sporadically returns null for some ids. Ask once more for just those.
+    missing_ids = ids.zip(rows).filter_map { |id, row| id if row.nil? }
+    if missing_ids.any?
+      retried = execute_reconciliation_query(payload.merge("ids": missing_ids), route: 'extend').fetch("rows", [])
+      rows = rows.compact + retried
+    end
+
+    format_get_entity_results(rows)
   end
 
 
@@ -220,20 +230,22 @@ class ArtsdataClient
       uris = Array(values).compact
       add_condition(property_id, uris, match_quantifier) if uris.any?
     end
+    conditions.compact!
+    raise ArgumentError, NO_FILTER_MESSAGE if conditions.empty?
 
     payload = {
       queries: [
         {
           limit: limit,
           type: EVENT_TYPE_URI,
-          conditions: conditions.compact
+          conditions: conditions
         }.compact
       ]
     }
 
     data = execute_reconciliation_query(payload, lang: language, route: 'match')
 
-    ids = data["results"].flat_map do |result|
+    ids = Array(data["results"]).flat_map do |result|
       result["candidates"].presence&.map { |c| c["id"] }
     end.compact
 

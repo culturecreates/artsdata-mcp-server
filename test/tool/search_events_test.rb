@@ -147,6 +147,27 @@ class SearchEventsTest < ActiveSupport::TestCase
     assert_equal({ results: [] }, response.structured_content)
   end
 
+  test "call returns a tool error naming the problem when no filter is given" do
+    response = SearchEvents.call
+
+    assert response.error?
+    assert_equal ArtsdataClient::NO_FILTER_MESSAGE, response.content.first[:text]
+  end
+
+  test "call returns a generic tool error, and logs the cause, on an unexpected failure" do
+    failing_client = Object.new
+    failing_client.define_singleton_method(:search_events) { |**| raise NoMethodError, "boom" }
+
+    logged = []
+    response = Rails.logger.stub(:error, ->(message) { logged << message }) do
+      ArtsdataClient.stub(:new, failing_client) { SearchEvents.call(places: ["http://kg.artsdata.ca/resource/K5-69"]) }
+    end
+
+    assert response.error?
+    assert_match(/failed unexpectedly/, response.content.first[:text])
+    assert_match(/NoMethodError: boom/, logged.join)
+  end
+
   # The tests below stub only execute_reconciliation_query - the method that actually talks to
   # the reconciliation service - so SearchEvents.call runs its real
   # search_events -> get_entity_by_extend_service -> format_get_entity_results pipeline against
@@ -193,7 +214,7 @@ class SearchEventsTest < ActiveSupport::TestCase
   test "call's response satisfies the response schema, and never queries extend, when match has no candidates" do
     response = call_search_events_with_stubbed_reconciliation(
       match_response: MATCH_RESPONSE_WITH_NO_CANDIDATES,
-      **DEFAULT_PARAMS
+      **DEFAULT_PARAMS.merge(startDateFrom: "2026-01-01")
     )
 
     wire_response = JSON.parse(response.content.first[:text])

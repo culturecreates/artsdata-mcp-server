@@ -5,7 +5,7 @@ class SearchEvents < MCP::Tool
               "the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary " \
               "(adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with " \
               "search_entities first. Places must be venues; for events in a city or region, use sparql_query " \
-              "(see the places parameter). #{ArtsdataIdRule::TOOL_NOTE}"
+              "(see the places parameter). At least one filter is required. #{ArtsdataIdRule::TOOL_NOTE}"
 
   request_schema_path = File.expand_path("../schema/search_events_request_schema.json", __dir__)
   REQUEST_SCHEMA = JSON.parse(File.read(request_schema_path), symbolize_names: true)
@@ -35,6 +35,14 @@ class SearchEvents < MCP::Tool
       MCP::Tool::Response.new(
         [{ type: "text", text: JSON.generate(structured_result) }],
         structured_content: structured_result)
+    rescue ArgumentError => e
+      # Returned as a tool error (isError: true) rather than raised, so the agent sees why the call
+      # failed - raised errors reach the client only as a generic "Internal error".
+      MCP::Tool::Response.new([{ type: "text", text: e.message }], error: true)
+    rescue StandardError => e
+      Rails.logger.error("SearchEvents failed: #{e.class}: #{e.message}")
+      MCP::Tool::Response.new([{ type: "text", text: "search_events failed unexpectedly. Try again or narrow the filters." }],
+                              error: true)
     end
   end
 end

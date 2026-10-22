@@ -37,7 +37,7 @@ Output
 
 ### search_events
 
-Tool to search for events in the Artsdata knowledge graph by place, artist, organization, has_event_type_concept and language. Places, artists and organizations are Artsdata entity URIs; the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with search_entities first. Places must be venues; for events in a city or region, use sparql_query (see the places parameter). Entity URIs end in the Artsdata ID (K\d+-\d+, e.g. K12-345); cite it with the entity name.
+Tool to search for events in the Artsdata knowledge graph by place, artist, organization, has_event_type_concept and language. Places, artists and organizations are Artsdata entity URIs; the has_event_type_concept filter takes concept URIs from the Artsdata Event Types vocabulary (adr:ArtsdataEventTypes), not schema.org classes. Resolve any name or label to its URI with search_entities first. Places must be venues; for events in a city or region, use sparql_query (see the places parameter). At least one filter is required. Entity URIs end in the Artsdata ID (K\d+-\d+, e.g. K12-345); cite it with the entity name.
 
 Input parameters
 - startDateFrom (string, optional): Optional lower bound filter. Includes events starting on or after this date/time. ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ).
