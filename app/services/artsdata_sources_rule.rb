@@ -15,7 +15,7 @@ module ArtsdataSourcesRule
 
   CONVENTION = "Sources of an entity: `<entity_uri> ^schema:sameAs/void:inDataset ?dataset`. Sources of one property " \
                "value, asserted or only claimed: replace ENTITY_URI and the property in SELECT ?value ?asserted " \
-               "?source ?datasetName ?maintainer WHERE { <<<ENTITY_URI> schema:name ?value>> prov:wasDerivedFrom " \
+               "?source ?datasetName ?maintainer WHERE { <<<ENTITY_URI> schema:name ?value>> prov:wasDerivedFrom|prov:hadPrimarySource " \
                "?source . BIND(EXISTS { <ENTITY_URI> schema:name ?value } AS ?asserted) OPTIONAL { ?source " \
                "void:inDataset ?dataset } BIND(COALESCE(?dataset, ?source) AS ?ds) OPTIONAL { ?ds schema:name " \
                "?datasetName } OPTIONAL { ?ds schema:maintainer ?maintainer } } LIMIT 100".freeze
