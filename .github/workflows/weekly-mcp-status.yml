@@ -1,0 +1,73 @@
+name: Weekly MCP development status
+on:
+  schedule:
+    # Friday 16:00 UTC = noon in Toronto during daylight saving time.
+    # GitHub cron is UTC; this runs at 11:00 Toronto time in winter.
+    - cron: '0 16 * * 5'
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish evidence-based weekly report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {owner, repo} = context.repo;
+            const now = new Date();
+            const since = new Date(now.getTime() - 7 * 86400000);
+            const sinceISO = since.toISOString();
+            const date = now.toISOString().slice(0,10);
+            const url = (type, number) => `https://github.com/${owner}/${repo}/${type}/${number}`;
+            const list = async (method, params) => github.paginate(method, {...params, per_page: 100});
+            const commits = await list(github.rest.repos.listCommits, {owner, repo, since: sinceISO});
+            const prs = (await list(github.rest.pulls.list, {owner, repo, state:'all', sort:'updated', direction:'desc'}))
+              .filter(p => new Date(p.updated_at) >= since);
+            const issues = (await list(github.rest.issues.listForRepo, {owner, repo, state:'all', since: sinceISO}))
+              .filter(i => !i.pull_request);
+            const releases = (await list(github.rest.repos.listReleases, {owner, repo}))
+              .filter(r => new Date(r.published_at || r.created_at) >= since);
+            const fmt = xs => xs.length ? xs.map(x=>'- '+x).join('\n') : '- None found in GitHub records for this period.';
+            const toolNames = ['get_schema','search_entities','sparql_query','search_events'];
+            const related = toolNames.map(name => {
+              const matches = [
+                ...prs.filter(p => (p.title+' '+(p.body||'')).toLowerCase().includes(name)).map(p => `PR [#${p.number}](${url('pull',p.number)}) — ${p.title}`),
+                ...issues.filter(i => (i.title+' '+(i.body||'')).toLowerCase().includes(name)).map(i => `Issue [#${i.number}](${url('issues',i.number)}) — ${i.title}`)
+              ];
+              return `### \`${name}\`\n${fmt(matches)}`;
+            }).join('\n\n');
+            const merged = prs.filter(p => p.merged_at && new Date(p.merged_at) >= since);
+            const openIssues = issues.filter(i => i.state === 'open');
+            const lines = [
+              `# Artsdata MCP weekly status — ${date}`,
+              `Period: ${since.toISOString().slice(0,10)} through ${date} (UTC). Automatically collected GitHub evidence; **not an AI-generated interpretation**.`,
+              '## Merged changes (not proof of deployment)',
+              fmt(merged.map(p => `[PR #${p.number}](${url('pull',p.number)}) — ${p.title} (merged ${p.merged_at.slice(0,10)})`)),
+              '## Releases (not proof of production deployment)',
+              fmt(releases.map(r => `[${r.name||r.tag_name}](${r.html_url}) — ${r.published_at||r.created_at}`)),
+              '## MCP tool changes mentioned in PRs or issues',
+              related,
+              '## Open issues updated this week (potential blockers / decisions)',
+              fmt(openIssues.map(i=>`[Issue #${i.number}](${url('issues',i.number)}) — ${i.title}`)),
+              '## Other PR activity',
+              fmt(prs.filter(p=>!p.merged_at || new Date(p.merged_at)<since).map(p=>`[PR #${p.number}](${url('pull',p.number)}) — ${p.title} (${p.state})`)),
+              '## Commit activity',
+              fmt(commits.slice(0,30).map(c=>`[${c.sha.slice(0,7)}](${c.html_url}) — ${c.commit.message.split('\n')[0]}`)),
+              '## Deployment verification',
+              'Not verified. A merge, release, or successful GitHub workflow does not alone establish production deployment. Verify the production release identifier and health checks separately.',
+              '## Decisions needed',
+              'Review the linked open issues and PRs; this workflow does not infer decisions from descriptions.',
+              '## Change summary',
+              merged.length || releases.length || issues.length || prs.length || commits.length ? 'GitHub activity found above; assess materiality manually.' : 'No GitHub activity found in the period.'
+            ];
+            const body = lines.join('\n\n');
+            const title = `Artsdata MCP weekly status — ${date}`;
+            const existing = await github.paginate(github.rest.issues.listForRepo, {owner, repo, state:'all', per_page:100});
+            if (existing.some(i=>i.title===title)) { core.info('Report already exists'); return; }
+            const created = await github.rest.issues.create({owner,repo,title,body});
+            core.info(created.data.html_url);
