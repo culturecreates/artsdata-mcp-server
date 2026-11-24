@@ -34,7 +34,12 @@ class ArtsdataSchema
       "This STR() rule is only for text - it does not apply to typed literals such as dates or numbers.",
     "A property whose `datatypes` includes xsd:date or xsd:dateTime (e.g. schema:startDate, " \
       "schema:endDate) is a typed literal, not text: compare or filter it directly against a typed " \
-      "literal, e.g. FILTER(?startDate >= \"2026-01-01T00:00:00\"^^xsd:dateTime), never with STR().",
+      "literal, e.g. FILTER(?startDate >= \"2026-01-01T00:00:00-05:00\"^^xsd:dateTime), never with STR().",
+    "Event times carry the venue's UTC offset (e.g. \"2026-11-27T20:00:00-05:00\") and are compared as " \
+      "instants; a bound without an offset is read as UTC, which shifts a local-day window by the offset. " \
+      "Write each dateTime bound with the local offset in effect on that date (e.g. -05:00 for Eastern in " \
+      "winter, -04:00 in summer): for a Toronto weekend, FILTER(?startDate >= " \
+      "\"2026-11-27T00:00:00-05:00\"^^xsd:dateTime && ?startDate < \"2026-11-30T00:00:00-05:00\"^^xsd:dateTime).",
     "`in` lists the only allowed values. `value_shape` describes the node a property points to " \
       "(e.g. an image or a postal address).",
     "Properties listed under `vocabularies` point to skos:Concept URIs in an Artsdata controlled vocabulary; " \

@@ -22,6 +22,13 @@ class GetSchemaTest < ActiveSupport::TestCase
     refute_empty schema.validate({ "class" => "Event" }).to_a
   end
 
+  test "conventions tell agents to write dateTime bounds with the local UTC offset" do
+    convention = DIGEST["conventions"].find { |c| c.include?("UTC offset") }
+
+    refute_nil convention, "get_schema should explain that dateTime bounds need the local UTC offset"
+    assert_includes convention, "\"2026-11-27T00:00:00-05:00\"^^xsd:dateTime"
+  end
+
   test "call returns the schema digest as structured content and as matching JSON text" do
     response = ArtsdataSchema.stub(:digest, DIGEST) { GetSchema.call }
 
