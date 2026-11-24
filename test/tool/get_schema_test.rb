@@ -22,6 +22,13 @@ class GetSchemaTest < ActiveSupport::TestCase
     refute_empty schema.validate({ "class" => "Event" }).to_a
   end
 
+  test "conventions warn that event queries also return event series, and how to exclude them" do
+    convention = DIGEST["conventions"].find { |c| c.include?("schema:EventSeries") }
+
+    refute_nil convention, "get_schema should explain that ?e a schema:Event also matches event series"
+    assert_includes convention, "FILTER NOT EXISTS { ?e a schema:EventSeries }"
+  end
+
   test "call returns the schema digest as structured content and as matching JSON text" do
     response = ArtsdataSchema.stub(:digest, DIGEST) { GetSchema.call }
 
