@@ -44,8 +44,8 @@ class ArtsdataSchema
     "An event series is also an event: ado:EventSeries is a subclass of ado:Event, and schema:EventSeries of " \
       "schema:Event, so ?e a schema:Event (or ado:Event) returns event series together with their individual " \
       "performances. A series and its first performance often share a name, venue and start date and look like " \
-      "duplicates. For one row per performance add FILTER NOT EXISTS { ?e a schema:EventSeries }; for one row " \
-      "per show, query ?e a schema:EventSeries instead.",
+      "duplicates. For one row per performance add FILTER NOT EXISTS { ?e a schema:EventSeries }; do not assume " \
+      "all events are in a schema:EventSeries because Artsdata rarely mints schema:EventSeries.",
     ArtsdataSourcesRule::CONVENTION,
     "This describes what the CORE graph is validated against, not every triple in it: entities can carry " \
       "properties that are not listed."
